@@ -476,7 +476,7 @@ export default function BubbleTeaShop() {
 
       {/* Cart Dialog */}
       <Dialog open={showCart} onOpenChange={setShowCart}>
-        <DialogContent className="sm:max-w-2xl max-h-[80vh] border-0 shadow-xl bg-white">
+        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-auto rounded-b-lg border-0 shadow-xl bg-white">
           <DialogHeader className="bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-t-xl -m-6 mb-4 p-6 relative overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-r from-red-600/20 to-orange-600/20"></div>
             <DialogTitle className="text-xl font-bold flex items-center relative z-10">
@@ -485,7 +485,7 @@ export default function BubbleTeaShop() {
             </DialogTitle>
           </DialogHeader>
 
-          <div className="max-h-96 overflow-y-auto">
+          <div className="max-h-[200px] overflow-y-auto">
             {cart.length === 0 ? (
               <div className="text-center py-12">
                 <div className="w-16 h-16 bg-gradient-to-br from-red-100 to-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -507,10 +507,10 @@ export default function BubbleTeaShop() {
                     {/* <div className="absolute top-2 right-2 text-orange-200/30">
                       <FoxTail className="w-4 h-4" />
                     </div> */}
-                    <div className="flex justify-between items-start mb-3">
+                    <div className="flex justify-between items-start">
                       <h4 className="font-semibold text-gray-900">{item.bubbleTea.name}</h4>
                       <Button
-                        size="sm"
+                        size="c25"
                         variant="ghost"
                         onClick={() => removeFromCart(item.id)}
                         className="text-red-500 hover:text-red-700 hover:bg-red-50 w-8 h-8 rounded-full p-0"
@@ -554,7 +554,7 @@ export default function BubbleTeaShop() {
                   </span>
                   <span>{formatPrice(getTotalCartPrice())}</span>
                 </div>
-                <div className="grid grid-cols-2 gap-3 relative z-10">
+                <div className="grid sm:grid-cols-2 gap-3 relative z-10 grid-cols-1">
                   <Button
                     variant="outline"
                     onClick={() => setShowCart(false)}
