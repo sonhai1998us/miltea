@@ -316,7 +316,7 @@ export default function BubbleTeaShop() {
                           alt={tea.name}
                           width={150}
                           height={150}
-                          className="w-full h-full object-cover"
+                          className="w-full h-full object-cover max-w-[115px] max-h-[172px]"
                         />
                         {/* {tea.popular && (
                           <Badge className="absolute top-2 left-2 z-10 bg-gradient-to-r from-red-500 to-orange-500 text-white border-0 text-xs">
@@ -335,7 +335,7 @@ export default function BubbleTeaShop() {
                             <span className="text-xs font-medium text-gray-600 ml-1">{tea.rating}</span>
                           </div>
                         </div>
-                        <p className="text-xs text-gray-600 line-clamp-2 mb-2">{tea.description}</p>
+                        <p className="text-xs text-gray-600 mb-2">{tea.description}</p>
                         <div className="text-base font-bold bg-gradient-to-r from-red-600 to-orange-600 bg-clip-text text-transparent">
                           {formatPrice(tea.price)}
                         </div>
@@ -382,7 +382,7 @@ export default function BubbleTeaShop() {
                           Phổ biến
                         </Badge>
                       )} */}
-                      <div className="relative overflow-hidden rounded-t-xl">
+                      <div className="relative overflow-hidden ">
                         <Image
                           src={tea.image || "/images/logo/default.png"}
                           alt={tea.name}
@@ -412,7 +412,7 @@ export default function BubbleTeaShop() {
                     </CardHeader>
                     <CardContent className="p-6">
                       <div className="flex items-center justify-between mb-2">
-                        <CardTitle className="text-xl font-bold text-gray-900 group-hover:text-red-600 transition-colors">
+                        <CardTitle className="text-xl md:line-clamp-2 md:min-h-[56px] font-bold text-gray-900 group-hover:text-red-600 transition-colors">
                           {tea.name}
                         </CardTitle>
                         <div className="flex items-center space-x-1">
@@ -421,7 +421,7 @@ export default function BubbleTeaShop() {
                         </div>
                       </div>
 
-                      <CardDescription className="text-gray-600 mb-4 line-clamp-2 min-h-[40px]">{tea.description}</CardDescription>
+                      <CardDescription className="text-gray-600 mb-4 md:line-clamp-2 md:min-h-[40px]">{tea.description}</CardDescription>
 
                       <div className="text-2xl font-bold bg-gradient-to-r from-red-600 to-orange-600 bg-clip-text text-transparent mb-6">
                         {formatPrice(tea.price)}
@@ -570,7 +570,7 @@ export default function BubbleTeaShop() {
         <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-auto rounded-b-lg border-0 shadow-xl bg-white">
           <DialogHeader className="bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-t-xl -m-6 mb-4 p-6 relative overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-r from-red-600/20 to-orange-600/20"></div>
-            <DialogTitle className="text-xl font-bold flex items-center relative z-10">
+            <DialogTitle className="text-xl font-bold flex items-center relative z-10 max-w-max">
               <ShoppingCart className="w-5 h-5 mr-2" />
               Kho báu của cáo ({cart.length} món)
             </DialogTitle>
@@ -671,7 +671,7 @@ export default function BubbleTeaShop() {
         <DialogContent className="w-[95vw] max-w-md sm:w-full border-0 shadow-xl bg-white">
           <DialogHeader className="bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-t-xl -m-6 mb-4 p-4 sm:p-6 relative overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-r from-red-600/20 to-orange-600/20"></div>
-            <DialogTitle className="text-lg sm:text-xl font-bold flex items-center relative z-10">
+            <DialogTitle className="text-lg sm:text-xl font-bold flex items-center relative max-w-max z-10">
               <Flame className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
               {paymentStep === 1 ? "Chọn phương thức thanh toán" : "Thanh toán"}
               <FoxEars className="w-4 h-4 sm:w-5 sm:h-5 ml-2" />
