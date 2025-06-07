@@ -300,109 +300,176 @@ export default function BubbleTeaShop() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          <div className="space-y-4 md:space-y-0 md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 md:gap-6">
             {filteredBubbleTeas.length > 0 ? (
               filteredBubbleTeas.map((tea) => (
                 <Card
                   key={tea.id}
-                  className="group overflow-hidden border-0 shadow-md hover:shadow-xl transition-all duration-500 bg-white relative"
+                  className="group overflow-hidden border-0 shadow-md hover:shadow-xl transition-all duration-500 bg-white relative flex flex-col md:block"
                 >
-                  
-                  <CardHeader className="p-0 relative">
-                    {tea.popular && (
-                      <Badge className="absolute top-4 left-4 z-10 bg-gradient-to-r from-red-500 to-orange-500 text-white border-0">
-                        <Heart className="w-3 h-3 mr-1" />
-                        Phổ biến
-                      </Badge>
-                    )}
-                    <div className="relative overflow-hidden rounded-t-xl">
-                      <Image
-                        src={tea.image || "/images/logo/default.png"}
-                        alt={tea.name}
-                        width={400}
-                        height={300}
-                        className="w-full h-56 object-contain group-hover:scale-110 transition-transform duration-700"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-red-900/20 via-transparent to-orange-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-
-                      {/* Floating sparkles on hover */}
-                      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                        {[...Array(3)].map((_, i) => (
-                          <div
-                            key={i}
-                            className="absolute text-yellow-300 animate-pulse"
-                            style={{
-                              left: `${20 + i * 25}%`,
-                              bottom: `${10 + i * 15}%`,
-                              animationDelay: `${i * 0.3}s`,
-                            }}
-                          >
-                            <Sparkles className="w-4 h-4" />
+                  {/* Mobile List View */}
+                  <div className="flex md:hidden">
+                    <div className="w-1/3 relative">
+                      <div className="relative overflow-hidden h-full">
+                        <Image
+                          src={tea.image || "/images/logo/default.png"}
+                          alt={tea.name}
+                          width={150}
+                          height={150}
+                          className="w-full h-full object-cover"
+                        />
+                        {/* {tea.popular && (
+                          <Badge className="absolute top-2 left-2 z-10 bg-gradient-to-r from-red-500 to-orange-500 text-white border-0 text-xs">
+                            <Heart className="w-2 h-2 mr-1" />
+                            Phổ biến
+                          </Badge>
+                        )} */}
+                      </div>
+                    </div>
+                    <div className="w-2/3 p-3 flex flex-col justify-between">
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <h4 className="font-bold text-gray-900 text-base">{tea.name}</h4>
+                          <div className="flex items-center">
+                            <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                            <span className="text-xs font-medium text-gray-600 ml-1">{tea.rating}</span>
                           </div>
-                        ))}
+                        </div>
+                        <p className="text-xs text-gray-600 line-clamp-2 mb-2">{tea.description}</p>
+                        <div className="text-base font-bold bg-gradient-to-r from-red-600 to-orange-600 bg-clip-text text-transparent">
+                          {formatPrice(tea.price)}
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between mt-2">
+                        <div className="flex items-center space-x-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => updateQuantity(tea.id, Math.max(0, getQuantity(tea.id) - 1))}
+                            className="w-7 h-7 rounded-full p-0 border hover:bg-red-50 hover:border-red-300"
+                          >
+                            <Minus className="w-3 h-3" />
+                          </Button>
+                          <span className="text-sm font-medium w-5 text-center">{getQuantity(tea.id)}</span>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => updateQuantity(tea.id, getQuantity(tea.id) + 1)}
+                            className="w-7 h-7 rounded-full p-0 border hover:bg-red-50 hover:border-red-300"
+                          >
+                            <Plus className="w-3 h-3" />
+                          </Button>
+                        </div>
+                        <Button
+                          size="sm"
+                          onClick={() => handleAddToCart(tea)}
+                          disabled={getQuantity(tea.id) === 0}
+                          className="bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white text-xs h-8 px-3 rounded-lg"
+                        >
+                          <Zap className="w-3 h-3 mr-1" />
+                          Thêm
+                        </Button>
                       </div>
                     </div>
-                  </CardHeader>
+                  </div>
 
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between mb-2">
-                      <CardTitle className="text-xl font-bold text-gray-900 group-hover:text-red-600 transition-colors">
-                        {tea.name}
-                      </CardTitle>
-                      <div className="flex items-center space-x-1">
-                        <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                        <span className="text-sm font-medium text-gray-600">{tea.rating}</span>
+                  {/* Desktop Grid View */}
+                  <div className="hidden md:block">
+                    <CardHeader className="p-0 relative">
+                      {/* {tea.popular && (
+                        <Badge className="absolute top-4 left-4 p-2 z-10 bg-gradient-to-r from-red-500 to-orange-500 text-white border-0">
+                          <Heart className="w-3 h-3 mr-1" />
+                          Phổ biến
+                        </Badge>
+                      )} */}
+                      <div className="relative overflow-hidden rounded-t-xl">
+                        <Image
+                          src={tea.image || "/images/logo/default.png"}
+                          alt={tea.name}
+                          width={400}
+                          height={300}
+                          className="w-full h-56 object-contain group-hover:scale-110 transition-transform duration-700"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-red-900/20 via-transparent to-orange-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+
+                        {/* Floating sparkles on hover */}
+                        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                          {[...Array(3)].map((_, i) => (
+                            <div
+                              key={i}
+                              className="absolute text-yellow-300 animate-pulse"
+                              style={{
+                                left: `${20 + i * 25}%`,
+                                bottom: `${10 + i * 15}%`,
+                                animationDelay: `${i * 0.3}s`,
+                              }}
+                            >
+                              <Sparkles className="w-4 h-4" />
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                    </div>
+                    </CardHeader>
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between mb-2">
+                        <CardTitle className="text-xl font-bold text-gray-900 group-hover:text-red-600 transition-colors">
+                          {tea.name}
+                        </CardTitle>
+                        <div className="flex items-center space-x-1">
+                          <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                          <span className="text-sm font-medium text-gray-600">{tea.rating}</span>
+                        </div>
+                      </div>
 
-                    <CardDescription className="text-gray-600 mb-4 line-clamp-2">{tea.description}</CardDescription>
+                      <CardDescription className="text-gray-600 mb-4 line-clamp-2 min-h-[40px]">{tea.description}</CardDescription>
 
-                    <div className="text-2xl font-bold bg-gradient-to-r from-red-600 to-orange-600 bg-clip-text text-transparent mb-6">
-                      {formatPrice(tea.price)}
-                    </div>
+                      <div className="text-2xl font-bold bg-gradient-to-r from-red-600 to-orange-600 bg-clip-text text-transparent mb-6">
+                        {formatPrice(tea.price)}
+                      </div>
 
-                    {/* Quantity Controls */}
-                    <div className="flex items-center justify-center gap-3 mb-6 p-3 bg-gradient-to-r from-red-50 to-orange-50 rounded-xl border border-orange-100">
+                      {/* Quantity Controls */}
+                      <div className="flex items-center justify-center gap-3 mb-6 p-3 bg-gradient-to-r from-red-50 to-orange-50 rounded-xl border border-orange-100">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => updateQuantity(tea.id, getQuantity(tea.id) - 1)}
+                          disabled={getQuantity(tea.id) === 0}
+                          className="w-10 h-10 rounded-full border hover:bg-red-50 hover:border-red-300"
+                        >
+                          <Minus className="w-4 h-4" />
+                        </Button>
+                        <Input
+                          type="number"
+                          value={getQuantity(tea.id)}
+                          onChange={(e) => updateQuantity(tea.id, Number.parseInt(e.target.value) || 0)}
+                          className="w-16 text-center border rounded-xl font-medium"
+                          min="0"
+                        />
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => updateQuantity(tea.id, getQuantity(tea.id) + 1)}
+                          className="w-10 h-10 rounded-full border hover:bg-red-50 hover:border-red-300"
+                        >
+                          <Plus className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </CardContent>
+
+                    <CardFooter className="p-6 pt-0">
                       <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => updateQuantity(tea.id, getQuantity(tea.id) - 1)}
+                        className="w-full bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white border-0 rounded-xl h-12 font-medium shadow-md hover:shadow-lg transition-all duration-300 relative overflow-hidden"
+                        onClick={() => handleAddToCart(tea)}
                         disabled={getQuantity(tea.id) === 0}
-                        className="w-10 h-10 rounded-full border hover:bg-red-50 hover:border-red-300"
                       >
-                        <Minus className="w-4 h-4" />
+                        <span className="relative z-10 flex items-center">
+                          <Zap className="w-4 h-4 mr-2" />
+                          Thêm vào giỏ hàng
+                        </span>
+                        <div className="absolute inset-0 bg-gradient-to-r from-orange-400/20 to-red-400/20 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
                       </Button>
-                      <Input
-                        type="number"
-                        value={getQuantity(tea.id)}
-                        onChange={(e) => updateQuantity(tea.id, Number.parseInt(e.target.value) || 0)}
-                        className="w-16 text-center border rounded-xl font-medium"
-                        min="0"
-                      />
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => updateQuantity(tea.id, getQuantity(tea.id) + 1)}
-                        className="w-10 h-10 rounded-full border hover:bg-red-50 hover:border-red-300"
-                      >
-                        <Plus className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </CardContent>
-
-                  <CardFooter className="p-6 pt-0">
-                    <Button
-                      className="w-full bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white border-0 rounded-xl h-12 font-medium shadow-md hover:shadow-lg transition-all duration-300 relative overflow-hidden"
-                      onClick={() => handleAddToCart(tea)}
-                      disabled={getQuantity(tea.id) === 0}
-                    >
-                      <span className="relative z-10 flex items-center">
-                        <Zap className="w-4 h-4 mr-2" />
-                        Thêm vào giỏ hàng
-                      </span>
-                      <div className="absolute inset-0 bg-gradient-to-r from-orange-400/20 to-red-400/20 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
-                    </Button>
-                  </CardFooter>
+                    </CardFooter>
+                  </div>
                 </Card>
               ))
             ) : (
@@ -598,7 +665,7 @@ export default function BubbleTeaShop() {
         </DialogContent>
       </Dialog>
 
-      
+
       {/* Payment Dialog */}
       <Dialog open={showPayment} onOpenChange={setShowPayment}>
         <DialogContent className="w-[95vw] max-w-md sm:w-full border-0 shadow-xl bg-white">
@@ -719,6 +786,7 @@ export default function BubbleTeaShop() {
                   </p>
                 </div>
               </div>
+
 
               <div className="bg-gradient-to-r from-orange-50 to-red-50 p-4 rounded-xl border border-orange-100">
                 <div className="text-sm text-gray-600 flex items-center justify-center">

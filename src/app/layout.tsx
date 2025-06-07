@@ -1,8 +1,8 @@
-import { Outfit } from 'next/font/google';
+import { Lemonada } from 'next/font/google';
 import './globals.css';
 
 
-const outfit = Outfit({
+const outfit = Lemonada({
   subsets: ["latin"],
 });
 
