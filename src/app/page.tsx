@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Plus, Minus, ShoppingCart, Star, Heart, Zap, Flame, Sparkles, Search } from "lucide-react"
+import { Plus, Minus, ShoppingCart, Star, Heart, Zap, Flame, Sparkles, Search, Coffee } from "lucide-react"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -130,6 +130,9 @@ export default function BubbleTeaShop() {
   const [showCart, setShowCart] = useState(false)
   const [selectedIce, setSelectedIce] = useState<string>("ice")
   const [searchQuery, setSearchQuery] = useState("")
+  const [showPayment, setShowPayment] = useState(false)
+  const [paymentStep, setPaymentStep] = useState(1)
+  const [paymentMethod, setPaymentMethod] = useState<string>("")
 
   const getQuantity = (teaId: string) => quantities[teaId] || 0
 
@@ -194,6 +197,27 @@ export default function BubbleTeaShop() {
 
   const removeFromCart = (itemId: string) => {
     setCart((prev) => prev.filter((item) => item.id !== itemId))
+  }
+
+  const handleOrderNow = () => {
+    setShowCart(false)
+    setShowPayment(true)
+    setPaymentStep(1)
+    setPaymentMethod("")
+  }
+
+  const handlePaymentNext = () => {
+    if (paymentMethod) {
+      setPaymentStep(2)
+    }
+  }
+
+  const handlePaymentComplete = () => {
+    setShowPayment(false)
+    setPaymentStep(1)
+    setPaymentMethod("")
+    setCart([])
+    // Here you could add a success toast notification
   }
 
   const filteredBubbleTeas = bubbleTeas.filter(
@@ -563,11 +587,157 @@ export default function BubbleTeaShop() {
                     <Sparkles className="w-4 h-4 mr-2" />
                     Tiếp tục khám phá
                   </Button>
-                  <Button className="bg-white text-red-600 hover:bg-gray-50 font-semibold rounded-xl shadow-md">
+                  <Button onClick={handleOrderNow} className="bg-white text-red-600 hover:bg-gray-50 font-semibold rounded-xl shadow-md">
                     <Flame className="w-4 h-4 mr-2" />
                     Đặt hàng ngay
                   </Button>
                 </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      
+      {/* Payment Dialog */}
+      <Dialog open={showPayment} onOpenChange={setShowPayment}>
+        <DialogContent className="w-[95vw] max-w-md sm:w-full border-0 shadow-xl bg-white">
+          <DialogHeader className="bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-t-xl -m-6 mb-4 p-4 sm:p-6 relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-r from-red-600/20 to-orange-600/20"></div>
+            <DialogTitle className="text-lg sm:text-xl font-bold flex items-center relative z-10">
+              <Flame className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+              {paymentStep === 1 ? "Chọn phương thức thanh toán" : "Thanh toán"}
+              <FoxEars className="w-4 h-4 sm:w-5 sm:h-5 ml-2" />
+            </DialogTitle>
+          </DialogHeader>
+
+          {paymentStep === 1 && (
+            <div className="space-y-6">
+              <div className="text-center">
+                <p className="text-gray-600 mb-4">
+                  Tổng tiền: <span className="font-bold text-red-600 text-xl">{formatPrice(getTotalCartPrice())}</span>
+                </p>
+              </div>
+
+              <div className="space-y-3">
+                <h4 className="font-semibold text-gray-900 flex items-center">
+                  <Sparkles className="w-4 h-4 mr-2 text-orange-500" />
+                  Chọn phương thức thanh toán
+                </h4>
+                <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="space-y-3">
+                  <div className="flex items-center space-x-3 p-4 rounded-lg border border-gray-200 hover:border-orange-300 hover:bg-orange-50 transition-colors">
+                    <RadioGroupItem value="cash" id="cash" className="border-orange-300 text-red-500" />
+                    <Label htmlFor="cash" className="font-medium text-gray-900 cursor-pointer flex-1 flex items-center">
+                      <Coffee className="w-5 h-5 mr-2 text-orange-500" />
+                      Thanh toán tiền mặt
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-3 p-4 rounded-lg border border-gray-200 hover:border-orange-300 hover:bg-orange-50 transition-colors">
+                    <RadioGroupItem value="transfer" id="transfer" className="border-orange-300 text-red-500" />
+                    <Label
+                      htmlFor="transfer"
+                      className="font-medium text-gray-900 cursor-pointer flex-1 flex items-center"
+                    >
+                      <Zap className="w-5 h-5 mr-2 text-orange-500" />
+                      Chuyển khoản ngân hàng
+                    </Label>
+                  </div>
+                </RadioGroup>
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <Button variant="outline" onClick={() => setShowPayment(false)} className="flex-1 rounded-xl">
+                  Hủy
+                </Button>
+                <Button
+                  onClick={handlePaymentNext}
+                  disabled={!paymentMethod}
+                  className="flex-1 bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white rounded-xl"
+                >
+                  Tiếp theo
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {paymentStep === 2 && paymentMethod === "cash" && (
+            <div className="space-y-6 text-center">
+              <div className="w-20 h-20 bg-gradient-to-br from-green-100 to-green-200 rounded-full flex items-center justify-center mx-auto">
+                <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+              </div>
+
+              <div>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">Thanh toán thành công!</h3>
+                <p className="text-gray-600 mb-4">Đơn hàng của bạn đã được xác nhận</p>
+                <p className="text-lg font-semibold text-red-600">Tổng tiền: {formatPrice(getTotalCartPrice())}</p>
+              </div>
+
+              <div className="bg-gradient-to-r from-orange-50 to-red-50 p-4 rounded-xl border border-orange-100">
+                <p className="text-sm text-gray-600 flex items-center justify-center">
+                  Cảm ơn bạn đã tin tưởng Foxy Bubble Tea!
+                </p>
+              </div>
+
+              <Button
+                onClick={handlePaymentComplete}
+                className="w-full bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white rounded-xl h-12"
+              >
+                <Sparkles className="w-4 h-4 mr-2" />
+                Hoàn tất
+              </Button>
+            </div>
+          )}
+
+          {paymentStep === 2 && paymentMethod === "transfer" && (
+            <div className="space-y-6 text-center">
+              <div>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">Quét mã QR để thanh toán</h3>
+                <p className="text-gray-600 mb-4">Số tiền cần chuyển khoản</p>
+                <p className="text-2xl font-bold text-red-600 mb-6">{formatPrice(getTotalCartPrice())}</p>
+              </div>
+
+              <div className="bg-white p-6 rounded-xl border-2 border-gray-200 mx-auto w-fit">
+                <div className="w-48 h-48 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg flex items-center justify-center mx-auto mb-4">
+                  <div className="text-center">
+                    <Image alt="" src={`https://img.vietqr.io/image/VCB-9931782220-qr_only.png?amount=${getTotalCartPrice()}`} width={600} height={776} />
+                  </div>
+                </div>
+
+                <div className="text-sm text-gray-600 space-y-1">
+                  <p>
+                    <strong>Ngân hàng:</strong> Vietcombank
+                  </p>
+                  <p>
+                    <strong>STK:</strong> *****
+                  </p>
+                  <p>
+                    <strong>Chủ TK:</strong> 1996 Tea & Coffee
+                  </p>
+                </div>
+              </div>
+
+              <div className="bg-gradient-to-r from-orange-50 to-red-50 p-4 rounded-xl border border-orange-100">
+                <div className="text-sm text-gray-600 flex items-center justify-center">
+                  <FoxEars className="w-4 h-4 mr-1 text-orange-500" />
+                  Chuyển khoản
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <Button variant="outline" onClick={() => setPaymentStep(1)} className="flex-1 rounded-xl">
+                  Quay lại
+                </Button>
+                <Button
+                  onClick={handlePaymentComplete}
+                  className="flex-1 bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white rounded-xl"
+                >
+                  <Flame className="w-4 h-4 mr-2" />
+                  Xác nhận
+                </Button>
               </div>
             </div>
           )}
