@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useMemo, useCallback } from "react"
 import {
   Plus,
   Minus,
@@ -64,67 +64,6 @@ interface Order {
   isCompleted: boolean
 }
 
-// const milkTeas: MilkTea[] = [
-//   {
-//     id: 1,
-//     name: "Fox's Classic Milk Tea",
-//     price: 45000,
-//     description: "Trà sữa truyền thống với hương vị đậm đà, được pha chế theo công thức bí mật của Fox",
-//     image: "/images/logo/logo1.png?height=200&width=200",
-//     rating: 4.8,
-//   },
-//   {
-//     id: 2,
-//     name: "Taro Fox Delight",
-//     price: 50000,
-//     description: "Trà sữa khoai môn thơm ngon với topping trân châu đen đặc biệt",
-//     image: "/images/logo/logo1.png?height=200&width=200",
-//     rating: 4.9,
-//   },
-//   {
-//     id: 3,
-//     name: "Brown Sugar Fox",
-//     price: 55000,
-//     description: "Trà sữa đường nâu tiger với lớp kem cheese béo ngậy trên mặt",
-//     image: "/images/logo/logo1.png?height=200&width=200",
-//     rating: 4.7,
-//   },
-//   {
-//     id: 4,
-//     name: "Matcha Fox Special",
-//     price: 52000,
-//     description: "Trà sữa matcha Nhật Bản cao cấp với vị đắng nhẹ và hậu ngọt",
-//     image: "/images/logo/logo1.png?height=200&width=200",
-//     rating: 4.6,
-//   },
-//   {
-//     id: 5,
-//     name: "Thai Fox Tea",
-//     price: 48000,
-//     description: "Trà sữa Thái Lan đậm đà với màu cam đặc trưng và vị ngọt thanh",
-//     image: "/images/logo/logo1.png?height=200&width=200",
-//     rating: 4.5,
-//   },
-//   {
-//     id: 6,
-//     name: "Chocolate Fox Dream",
-//     price: 58000,
-//     description: "Trà sữa chocolate đậm đà với topping whipped cream và chocolate chips",
-//     image: "/images/logo/logo1.png?height=200&width=200",
-//     rating: 4.8,
-//   },
-// ]
-
-// const toppings: Topping[] = [
-//   { id: 1, name: "Trân châu đen", price: 8000 },
-//   { id: 2, name: "Trân châu trắng", price: 8000 },
-//   { id: 3, name: "Thạch dừa", price: 10000 },
-//   { id: 4, name: "Thạch cà phê", price: 10000 },
-//   { id: 5, name: "Pudding", price: 12000 },
-//   { id: 6, name: "Kem cheese", price: 15000 },
-//   { id: 7, name: "Trân châu hoàng kim", price: 15000 },
-// ]
-
 const sweetnessLevels = [
   { value: "50", label: "Ít ngọt" },
   { value: "70", label: "Ngọt vừa" },
@@ -147,9 +86,7 @@ export default function FoxMilkTeaShop() {
   const [selectedNote, setSelectedNote] = useState("")
   const [cart, setCart] = useState<CartItem[]>([])
   const [orders, setOrders] = useState<Order[]>([])
-  const [showCart, setShowCart] = useState(false)
-  const [showCustomization, setShowCustomization] = useState(false)
-  const [showCheckout, setShowCheckout] = useState(false)
+  const [activeSheet, setActiveSheet] = useState<'none' | 'customization' | 'cart' | 'checkout'>('none')
   const [checkoutStep, setCheckoutStep] = useState(1)
   const [paymentMethod, setPaymentMethod] = useState("")
   const [cashAmount, setCashAmount] = useState<number>(0)
@@ -161,57 +98,46 @@ export default function FoxMilkTeaShop() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetchApi(`${process.env.API_URL}${process.env.PREFIX_API}milk-tea-and-coffees?populate=image`).then(resp => resp?.data ?? []).catch(e => console.log(e))
-        setMilkTeas(response as MilkTea[])
-        const responseToppings = await fetchApi(`${process.env.API_URL}${process.env.PREFIX_API}toppings`).then(resp => resp?.data ?? []).catch(e => console.log(e))
-        setToppings(responseToppings as Topping[])
-        
-        const responseCartItems = await fetchApi(`${process.env.API_URL}${process.env.PREFIX_API}cart-items?populate=*&filters[isOrdered]=false`).then(resp => resp?.data ?? []).catch(e => console.log(e))
-        setCart(responseCartItems as CartItem[])
+        const [milkTeasRes, toppingsRes, cartRes, ordersRes] = await Promise.all([
+          fetchApi(`${process.env.API_URL}${process.env.PREFIX_API}milk-tea-and-coffees?populate=image`).then(resp => resp?.data ?? []).catch(e => console.log(e)),
+          fetchApi(`${process.env.API_URL}${process.env.PREFIX_API}toppings`).then(resp => resp?.data ?? []).catch(e => console.log(e)),
+          fetchApi(`${process.env.API_URL}${process.env.PREFIX_API}cart-items?populate=*&filters[isOrdered]=false`).then(resp => resp?.data ?? []).catch(e => console.log(e)),
+          fetchApi(`${process.env.API_URL}${process.env.PREFIX_API}orders?populate[items][populate]=*`).then(resp => resp?.data ?? []).catch(e => console.log(e)),
+        ])
+        setMilkTeas(milkTeasRes as MilkTea[])
+        setToppings(toppingsRes as Topping[])
+        setCart(cartRes as CartItem[])
+        setOrders(ordersRes as Order[])
       } catch (err) {
         console.log(err)
       }
     }
-    
     fetchData()
   }, [])
 
-  useEffect(() => {
-    const fetchOrders = async () => {
-      try {
-        const response = await fetchApi(`${process.env.API_URL}${process.env.PREFIX_API}orders?populate[items][populate]=*`).then(resp => resp?.data ?? []).catch(e => console.log(e))
-        setOrders(response as Order[])
-      } catch (err) {
-        console.log(err)
-      }
-    }
-    
-    fetchOrders()
-  }, [])
-
-  const getQuantity = (id: number) => quantities[id] || 0
+  const getQuantity = useCallback((id: number) => quantities[id] || 0, [quantities])
 
   const formatInputNumber = (value: string) => {
     // Remove all non-digit characters
     const number = value.replace(/\D/g, '')
     // Convert to number and format with thousand separators
-    return number ? Number(number).toLocaleString('vi-VN') : ''
+    return number ? parseInt(number, 10).toLocaleString('vi-VN') : ''
   }
 
   const handleCashInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value
     // Remove thousand separators and convert to number
-    const number = Number(value.replace(/\./g, ''))
+    const number = parseInt(value.replace(/\./g, ''), 10)
     if (!isNaN(number) && number >= 0) {
       setCashAmount(number)
     }
   }
 
-  const updateQuantity = (id: number, newQuantity: number) => {
+  const updateQuantity = useCallback((id: number, newQuantity: number) => {
     if (newQuantity >= 0) {
       setQuantities((prev) => ({ ...prev, [id]: newQuantity }))
     }
-  }
+  }, [])
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("vi-VN", {
@@ -230,14 +156,14 @@ export default function FoxMilkTeaShop() {
     }).format(new Date(date))
   }
 
-  const handleAddToCart = (milkTea: MilkTea) => {
+  const handleAddToCart = useCallback((milkTea: MilkTea) => {
     setSelectedMilkTea(milkTea)
     setSelectedToppings([])
     setSelectedSweetness("50")
     setSelectedIce("normal-ice")
     setSelectedNote("")
-    setShowCustomization(true)
-  }
+    setActiveSheet('customization')
+  }, [])
 
   const confirmAddToCart = async () => {
     if (!selectedMilkTea) return
@@ -279,7 +205,7 @@ export default function FoxMilkTeaShop() {
       const responseCartItems = await fetchApi(`${process.env.API_URL}${process.env.PREFIX_API}cart-items?populate=*&filters[isOrdered]=false`).then(resp => resp?.data ?? []).catch(e => console.log(e))
       setCart(responseCartItems as CartItem[])
 
-      setShowCustomization(false)
+      setActiveSheet('none')
       setSelectedMilkTea(null)
     }
     ).catch(err => console.log(err));
@@ -290,20 +216,14 @@ export default function FoxMilkTeaShop() {
     }
   }
 
-  const toggleTopping = (topping: Topping) => {
+  const toggleTopping = useCallback((topping: Topping) => {
     setSelectedToppings((prev) => {
       const exists = prev.find((t) => t.id === topping.id)
-      if (exists) {
-        return prev.filter((t) => t.id !== topping.id)
-      } else {
-        return [...prev, topping]
-      }
+      return exists ? prev.filter((t) => t.id !== topping.id) : [...prev, topping]
     })
-  }
+  }, [])
 
-  const getTotalCartPrice = () => {
-    return cart.reduce((sum, item) => sum + item.totalPrice, 0)
-  }
+  const getTotalCartPrice = useMemo(() => cart.reduce((sum, item) => sum + item.totalPrice, 0), [cart])
 
   const removeFromCart = async (itemId: string) => {
     // setCart((prev) => prev.filter((item) => item.id !== itemId))
@@ -316,8 +236,7 @@ export default function FoxMilkTeaShop() {
   }
 
   const handleStartCheckout = () => {
-    setShowCart(false)
-    setShowCheckout(true)
+    setActiveSheet('checkout')
     setCheckoutStep(1)
     setPaymentMethod("")
     // setOrderCompleted(false)
@@ -335,8 +254,8 @@ export default function FoxMilkTeaShop() {
         setCashError("Vui lòng nhập số tiền khách đưa")
         return
       }
-      if (cashAmount < getTotalCartPrice()) {
-        setCashError(`Số tiền không đủ. Còn thiếu ${formatPrice(getTotalCartPrice() - cashAmount)}`)
+      if (cashAmount < getTotalCartPrice) {
+        setCashError(`Số tiền không đủ. Còn thiếu ${formatPrice(getTotalCartPrice - cashAmount)}`)
         return
       }
     }
@@ -347,7 +266,7 @@ export default function FoxMilkTeaShop() {
       items: {
         connect: cart.map((t) => ({ documentId: t.documentId })),
       },
-      totalPrice: getTotalCartPrice(),
+      totalPrice: getTotalCartPrice,
       paymentMethod: paymentMethod === "cash" ? "Tiền mặt" : "Chuyển khoản",
       orderTime: new Date(),
       isCompleted: false,
@@ -358,16 +277,12 @@ export default function FoxMilkTeaShop() {
         setOrders(response as Order[])
       })
 
-    // setOrders((prev) => [...prev, newOrder])
-
     // Reset cart sau 200 ms
     setTimeout(async() => {
-      // setCart([])
-      // console.log(extractValuesByKey(cart, "documentId"));
       await putMultipleApi(`${process.env.API_URL}${process.env.PREFIX_API}put-cart_items`, {documentIds: extractValuesByKey(cart, "documentId") as string[]}).then(async () => 
         {
           setCart([])
-          setShowCheckout(false)
+          setActiveSheet('none')
           setCheckoutStep(1)
           setPaymentMethod("")
           setCashAmount(0)
@@ -389,14 +304,16 @@ export default function FoxMilkTeaShop() {
   }
 
   // Sắp xếp đơn hàng: inactive trước, sau đó theo thời gian cũ nhất
-  const sortedOrders = [...orders].sort((a, b) => {
-    if (a.isCompleted !== b.isCompleted) {
-      return a.isCompleted ? 1 : -1 // inactive (false) trước
-    }
-    const aTime = new Date(a.orderTime).getTime();
-    const bTime = new Date(b.orderTime).getTime();
-    return aTime - bTime // cũ nhất trước
-  })
+  const sortedOrders = useMemo(() => {
+    return [...orders].sort((a, b) => {
+      if (a.isCompleted !== b.isCompleted) {
+        return a.isCompleted ? 1 : -1
+      }
+      const aTime = new Date(a.orderTime).getTime();
+      const bTime = new Date(b.orderTime).getTime();
+      return aTime - bTime
+    })
+  }, [orders])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 to-red-50">
@@ -421,7 +338,7 @@ export default function FoxMilkTeaShop() {
               variant="ghost"
               size="sm"
               className="text-white hover:bg-white/20 relative"
-              onClick={() => setShowCart(true)}
+              onClick={() => setActiveSheet('cart')}
             >
               <ShoppingCart className="w-5 h-5" />
               {cart.length > 0 && (
@@ -446,14 +363,14 @@ export default function FoxMilkTeaShop() {
               >
                 <CardContent className="p-0">
                   <div className="flex items-center">
-                    <div className="w-24 h-24 flex items-center justify-center">
+                    <div className="w-24 h-24 flex items-center justify-center pl-3">
                       <img
                         src={milkTea.image.url || "/images/logo/logo1.png"}
                         alt={milkTea.name}
                         className="w-20 h-20 object-cover rounded-lg"
                       />
                     </div>
-                    <div className="flex-1 p-3">
+                    <div className="flex-1 p-3 pl-2">
                       <div className="flex items-start justify-between mb-1">
                         <h3 className="font-semibold text-gray-800 text-sm leading-tight">{milkTea.name}</h3>
                         <div className="flex items-center gap-1 ml-2">
@@ -462,7 +379,7 @@ export default function FoxMilkTeaShop() {
                         </div>
                       </div>
                       <p className="text-xs text-gray-600 mb-2 line-clamp-2">{milkTea.description}</p>
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between gap-2">
                         <span className="font-bold text-orange-600">{formatPrice(milkTea.price)}</span>
                         <div className="flex items-center gap-2">
                           <div className="flex items-center border border-orange-300 rounded-lg">
@@ -477,8 +394,8 @@ export default function FoxMilkTeaShop() {
                             <Input
                               type="number"
                               value={getQuantity(milkTea.id)}
-                              onChange={(e) => updateQuantity(milkTea.id, Number.parseInt(e.target.value) || 0)}
-                              className="w-12 h-7 text-center border-0 text-xs p-0"
+                              onChange={(e) => updateQuantity(milkTea.id, parseInt(e.target.value, 10) || 0)}
+                              className="w-8 h-7 text-center border-0 text-xs p-0"
                               min="0"
                             />
                             <Button
@@ -517,7 +434,7 @@ export default function FoxMilkTeaShop() {
               <p className="text-sm text-gray-400">Hãy đặt trà sữa yêu thích nhé!</p>
               <Button
                 onClick={() => setActiveTab("order")}
-                className="mt-4 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600"
+                className="mt-4 bg-gradient-to-r from-orange-500 to-red-500"
               >
                 Đặt trà sữa ngay
               </Button>
@@ -626,465 +543,467 @@ export default function FoxMilkTeaShop() {
       </div>
 
       {/* Bottom Sheet Overlay */}
-      {(showCustomization || showCart || showCheckout) && (
+      {activeSheet !== 'none' && (
         <div
           className="fixed inset-0 bg-black/50 z-50 transition-opacity duration-300"
-          onClick={() => {
-            setShowCustomization(false)
-            setShowCart(false)
-            setShowCheckout(false)
-          }}
+          onClick={() => setActiveSheet('none')}
         />
       )}
 
       {/* Customization Bottom Sheet */}
-      <div
-        className={`fixed top-0 bottom-0 left-0 right-0 bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-out ${
-          showCustomization ? "translate-y-0" : "translate-y-full"
-        }`}
-      >
-        <div className="max-w-md mx-auto h-full flex flex-col">
-          {/* Header */}
-          <div className="px-4 pb-4 pt-4 border-b border-gray-100">
-            <div className="flex items-center">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 w-8 p-0 mr-3"
-                onClick={() => setShowCustomization(false)}
-              >
-                <ArrowLeft className="w-4 h-4" />
-              </Button>
-              <h2 className="text-lg font-bold text-orange-600 flex items-center gap-2 flex-1 justify-center">
-                <span>🦊</span>
-                Tùy chỉnh đồ uống
-              </h2>
-              <div className="w-8"></div> {/* Spacer for centering */}
+      {activeSheet === 'customization' && (
+        <div
+          className={`fixed top-0 bottom-0 left-0 right-0 bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-out ${
+            activeSheet === 'customization' ? "translate-y-0" : "translate-y-full"
+          }`}
+        >
+          <div className="max-w-md mx-auto h-full flex flex-col">
+            {/* Header */}
+            <div className="px-4 pb-4 pt-4 border-b border-gray-100">
+              <div className="flex items-center">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0 mr-3"
+                  onClick={() => setActiveSheet('none')}
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                </Button>
+                <h2 className="text-lg font-bold text-orange-600 flex items-center gap-2 flex-1 justify-center">
+                  <span>🦊</span>
+                  Tùy chỉnh đồ uống
+                </h2>
+                <div className="w-8"></div> {/* Spacer for centering */}
+              </div>
             </div>
-          </div>
 
-          {selectedMilkTea && (
-            <>
-              {/* Scrollable Content */}
-              <div className="flex-1 overflow-y-auto ">
-                <div className="p-4 space-y-4">
-                  <div className="text-center bg-orange-50 p-3 rounded-lg">
-                    <h3 className="font-semibold text-gray-800">{selectedMilkTea.name}</h3>
-                    <p className="text-sm text-gray-600">Số lượng: {getQuantity(selectedMilkTea.id)}</p>
-                  </div>
-
-                  {/* Toppings */}
-                  <div>
-                    <Label className="text-sm font-semibold text-gray-700">Chọn topping</Label>
-                    <div className="grid gap-2 mt-2">
-                      {toppings.map((topping) => (
-                        <div key={topping.id} className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-50">
-                          <Checkbox
-                            id={`topping-${topping.id}`}
-                            checked={selectedToppings.some((t) => t.id === topping.id)}
-                            onCheckedChange={() => toggleTopping(topping)}
-                          />
-                          <Label
-                            htmlFor={`topping-${topping.id}`}
-                            className="flex-1 text-sm cursor-pointer flex justify-between"
-                          >
-                            <span>{topping.name}</span>
-                            <span className="text-orange-600 font-medium">+{formatPrice(topping.price)}</span>
-                          </Label>
-                        </div>
-                      ))}
+            {selectedMilkTea && (
+              <>
+                {/* Scrollable Content */}
+                <div className="flex-1 overflow-y-auto ">
+                  <div className="p-4 space-y-4">
+                    <div className="text-center bg-orange-50 p-3 rounded-lg">
+                      <h3 className="font-semibold text-gray-800">{selectedMilkTea.name}</h3>
+                      <p className="text-sm text-gray-600">Số lượng: {getQuantity(selectedMilkTea.id)}</p>
                     </div>
-                  </div>
 
-                  <Separator />
+                    {/* Toppings */}
+                    <div>
+                      <Label className="text-sm font-semibold text-gray-700">Chọn topping</Label>
+                      <div className="grid gap-2 mt-2">
+                        {toppings.map((topping) => (
+                          <div key={topping.id} className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-50">
+                            <Checkbox
+                              id={`topping-${topping.id}`}
+                              checked={selectedToppings.some((t) => t.id === topping.id)}
+                              onCheckedChange={() => toggleTopping(topping)}
+                            />
+                            <Label
+                              htmlFor={`topping-${topping.id}`}
+                              className="flex-1 text-sm cursor-pointer flex justify-between"
+                            >
+                              <span>{topping.name}</span>
+                              <span className="text-orange-600 font-medium">+{formatPrice(topping.price)}</span>
+                            </Label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
 
-                  {/* Sweetness */}
-                  <div>
-                    <Label className="text-sm font-semibold text-gray-700">Độ ngọt</Label>
-                    <RadioGroup value={selectedSweetness} onValueChange={setSelectedSweetness} className="mt-2">
-                      {sweetnessLevels.map((level) => (
-                        <div key={level.value} className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-50">
-                          <RadioGroupItem value={level.value} id={`sweet-${level.value}`} />
-                          <Label htmlFor={`sweet-${level.value}`} className="text-sm cursor-pointer">
-                            {level.label}
-                          </Label>
-                        </div>
-                      ))}
-                    </RadioGroup>
-                  </div>
+                    <Separator />
 
-                  <Separator />
+                    {/* Sweetness */}
+                    <div>
+                      <Label className="text-sm font-semibold text-gray-700">Độ ngọt</Label>
+                      <RadioGroup value={selectedSweetness} onValueChange={setSelectedSweetness} className="mt-2">
+                        {sweetnessLevels.map((level) => (
+                          <div key={level.value} className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-50">
+                            <RadioGroupItem value={level.value} id={`sweet-${level.value}`} />
+                            <Label htmlFor={`sweet-${level.value}`} className="text-sm cursor-pointer">
+                              {level.label}
+                            </Label>
+                          </div>
+                        ))}
+                      </RadioGroup>
+                    </div>
 
-                  {/* Ice */}
-                  <div>
-                    <Label className="text-sm font-semibold text-gray-700">Lượng đá</Label>
-                    <RadioGroup value={selectedIce} onValueChange={setSelectedIce} className="mt-2">
-                      {iceLevels.map((level) => (
-                        <div key={level.value} className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-50">
-                          <RadioGroupItem value={level.value} id={`ice-${level.value}`} />
-                          <Label htmlFor={`ice-${level.value}`} className="text-sm cursor-pointer">
-                            {level.label}
-                          </Label>
-                        </div>
-                      ))}
-                    </RadioGroup>
-                  </div>
+                    <Separator />
 
-                  <Separator />
+                    {/* Ice */}
+                    <div>
+                      <Label className="text-sm font-semibold text-gray-700">Lượng đá</Label>
+                      <RadioGroup value={selectedIce} onValueChange={setSelectedIce} className="mt-2">
+                        {iceLevels.map((level) => (
+                          <div key={level.value} className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-50">
+                            <RadioGroupItem value={level.value} id={`ice-${level.value}`} />
+                            <Label htmlFor={`ice-${level.value}`} className="text-sm cursor-pointer">
+                              {level.label}
+                            </Label>
+                          </div>
+                        ))}
+                      </RadioGroup>
+                    </div>
 
-                  {/* Note */}
-                  <div>
-                    <Label className="text-sm font-semibold text-gray-700">Ghi chú cho ly trà sữa</Label>
-                    <textarea
-                      value={selectedNote}
-                      onChange={(e) => setSelectedNote(e.target.value)}
-                      placeholder="Ví dụ: Ít đường hơn, nhiều đá, không topping..."
-                      className="w-full mt-2 p-3 border border-gray-300 rounded-lg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                      rows={3}
-                      maxLength={200}
-                    />
-                    <div className="text-xs text-gray-400 mt-1 text-right">{selectedNote.length}/200 ký tự</div>
+                    <Separator />
+
+                    {/* Note */}
+                    <div>
+                      <Label className="text-sm font-semibold text-gray-700">Ghi chú cho ly trà sữa</Label>
+                      <textarea
+                        value={selectedNote}
+                        onChange={(e) => setSelectedNote(e.target.value)}
+                        placeholder="Ví dụ: Ít đường hơn, nhiều đá, không topping..."
+                        className="w-full mt-2 p-3 border border-gray-300 rounded-lg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        rows={3}
+                        maxLength={200}
+                      />
+                      <div className="text-xs text-gray-400 mt-1 text-right">{selectedNote.length}/200 ký tự</div>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Fixed Bottom Section */}
-              <div className="border-t border-gray-100 bg-white">
-                {/* Price Summary */}
-                <div className="p-4">
-                  <div className="bg-orange-50 p-4 rounded-lg">
-                    <div className="flex justify-between text-sm mb-1">
-                      <span>Giá gốc:</span>
-                      <span>{formatPrice(selectedMilkTea.price * getQuantity(selectedMilkTea.id))}</span>
-                    </div>
-                    {selectedToppings.length > 0 && (
+                {/* Fixed Bottom Section */}
+                <div className="border-t border-gray-100 bg-white">
+                  {/* Price Summary */}
+                  <div className="p-4">
+                    <div className="bg-orange-50 p-4 rounded-lg">
                       <div className="flex justify-between text-sm mb-1">
-                        <span>Topping:</span>
+                        <span>Giá gốc:</span>
+                        <span>{formatPrice(selectedMilkTea.price * getQuantity(selectedMilkTea.id))}</span>
+                      </div>
+                      {selectedToppings.length > 0 && (
+                        <div className="flex justify-between text-sm mb-1">
+                          <span>Topping:</span>
+                          <span>
+                            +
+                            {formatPrice(
+                              selectedToppings.reduce((sum, t) => sum + t.price, 0) * getQuantity(selectedMilkTea.id),
+                            )}
+                          </span>
+                        </div>
+                      )}
+                      <Separator className="my-2" />
+                      <div className="flex justify-between font-semibold text-orange-600">
+                        <span>Tổng cộng:</span>
                         <span>
-                          +
                           {formatPrice(
-                            selectedToppings.reduce((sum, t) => sum + t.price, 0) * getQuantity(selectedMilkTea.id),
+                            (selectedMilkTea.price + selectedToppings.reduce((sum, t) => sum + t.price, 0)) *
+                              getQuantity(selectedMilkTea.id),
                           )}
                         </span>
                       </div>
-                    )}
-                    <Separator className="my-2" />
-                    <div className="flex justify-between font-semibold text-orange-600">
-                      <span>Tổng cộng:</span>
-                      <span>
-                        {formatPrice(
-                          (selectedMilkTea.price + selectedToppings.reduce((sum, t) => sum + t.price, 0)) *
-                            getQuantity(selectedMilkTea.id),
-                        )}
-                      </span>
                     </div>
-                  </div>
 
-                  <Button
-                    onClick={confirmAddToCart}
-                    className="w-full mt-4 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 h-12 text-base font-semibold"
-                  >
-                    Thêm vào giỏ hàng
-                  </Button>
-                </div>
-              </div>
-            </>
-          )}
-        </div>
-      </div>
-
-      {/* Cart Bottom Sheet */}
-      <div
-        className={`fixed top-0 bottom-0 left-0 right-0 bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-out ${
-          showCart ? "translate-y-0" : "translate-y-full"
-        }`}
-      >
-        <div className="max-w-md mx-auto h-full flex flex-col">
-          {/* Header */}
-          <div className="px-4 pb-4 pt-4 border-b border-gray-100">
-            <div className="flex items-center">
-              <Button variant="ghost" size="sm" className="h-8 w-8 p-0 mr-3" onClick={() => setShowCart(false)}>
-                <ArrowLeft className="w-4 h-4" />
-              </Button>
-              <h2 className="text-lg font-bold text-orange-600 flex items-center gap-2 flex-1 justify-center">
-                <ShoppingCart className="w-5 h-5" />
-                Giỏ hàng của bạn
-              </h2>
-              <div className="w-8"></div> {/* Spacer for centering */}
-            </div>
-          </div>
-
-          {cart.length === 0 ? (
-            <div className="flex-1 flex items-center justify-center">
-              <div className="text-center">
-                <div className="text-6xl mb-4">🦊</div>
-                <p className="text-gray-500 text-lg mb-2">Giỏ hàng trống</p>
-                <p className="text-sm text-gray-400">Hãy chọn món yêu thích nhé!</p>
-              </div>
-            </div>
-          ) : (
-            <>
-              {/* Scrollable Content */}
-              <div className="flex-1 overflow-y-auto ">
-                <div className="p-4 space-y-4">
-                  {cart.map((item) => (
-                    <Card key={item.id} className="border-orange-200">
-                      <CardContent className="p-4">
-                        <div className="flex justify-between items-start mb-2">
-                          <h4 className="font-semibold text-base">{item.milkTea.name}</h4>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 w-8 p-0 text-red-500 hover:bg-red-50"
-                            onClick={() => removeFromCart(item.documentId as string)}
-                          >
-                            X
-                          </Button>
-                        </div>
-                        <div className="text-sm text-gray-600 space-y-1 mb-3">
-                          <p>Số lượng: {item.quantity}</p>
-                          <p>Độ ngọt: {item.sweetness}</p>
-                          <p>Lượng đá: {item.ice}</p>
-                          {item.toppings.length > 0 && <p>Topping: {item.toppings.map((t) => t.name).join(", ")}</p>}
-                          {item.note && <p className="text-orange-600 font-medium">Ghi chú: {item.note}</p>}
-                        </div>
-                        <div className="flex justify-end">
-                          <span className="font-bold text-lg text-orange-600">{formatPrice(item.totalPrice)}</span>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </div>
-
-              {/* Fixed Bottom Section */}
-              <div className="border-t border-gray-100 bg-white">
-                <div className="p-4">
-                  <div className="bg-gradient-to-r from-orange-50 to-red-50 p-4 rounded-lg">
-                    <div className="flex justify-between items-center mb-4">
-                      <span className="font-bold text-xl">Tổng cộng:</span>
-                      <span className="font-bold text-2xl text-orange-600">{formatPrice(getTotalCartPrice())}</span>
-                    </div>
                     <Button
-                      className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 h-12 text-base font-semibold"
-                      onClick={handleStartCheckout}
+                      onClick={confirmAddToCart}
+                      className="w-full mt-4 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 h-12 text-base font-semibold"
                     >
-                      🦊 Đặt hàng ngay
+                      Thêm vào giỏ hàng
                     </Button>
                   </div>
                 </div>
-              </div>
-            </>
-          )}
+              </>
+            )}
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* Cart Bottom Sheet */}
+      {activeSheet === 'cart' && (
+        <div
+          className={`fixed top-0 bottom-0 left-0 right-0 bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-out ${
+            activeSheet === 'cart' ? "translate-y-0" : "translate-y-full"
+          }`}
+        >
+          <div className="max-w-md mx-auto h-full flex flex-col">
+            {/* Header */}
+            <div className="px-4 pb-4 pt-4 border-b border-gray-100">
+              <div className="flex items-center">
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 mr-3" onClick={() => setActiveSheet('none')}>
+                  <ArrowLeft className="w-4 h-4" />
+                </Button>
+                <h2 className="text-lg font-bold text-orange-600 flex items-center gap-2 flex-1 justify-center">
+                  <ShoppingCart className="w-5 h-5" />
+                  Giỏ hàng của bạn
+                </h2>
+                <div className="w-8"></div> {/* Spacer for centering */}
+              </div>
+            </div>
+
+            {cart.length === 0 ? (
+              <div className="flex-1 flex items-center justify-center">
+                <div className="text-center">
+                  <div className="text-6xl mb-4">🦊</div>
+                  <p className="text-gray-500 text-lg mb-2">Giỏ hàng trống</p>
+                  <p className="text-sm text-gray-400">Hãy chọn món yêu thích nhé!</p>
+                </div>
+              </div>
+            ) : (
+              <>
+                {/* Scrollable Content */}
+                <div className="flex-1 overflow-y-auto ">
+                  <div className="p-4 space-y-4">
+                    {cart.map((item) => (
+                      <Card key={item.id} className="border-orange-200">
+                        <CardContent className="p-4">
+                          <div className="flex justify-between items-start mb-2">
+                            <h4 className="font-semibold text-base">{item.milkTea.name}</h4>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0 text-red-500 hover:bg-red-50"
+                              onClick={() => removeFromCart(item.documentId as string)}
+                            >
+                              X
+                            </Button>
+                          </div>
+                          <div className="text-sm text-gray-600 space-y-1 mb-3">
+                            <p>Số lượng: {item.quantity}</p>
+                            <p>Độ ngọt: {item.sweetness}</p>
+                            <p>Lượng đá: {item.ice}</p>
+                            {item.toppings.length > 0 && <p>Topping: {item.toppings.map((t) => t.name).join(", ")}</p>}
+                            {item.note && <p className="text-orange-600 font-medium">Ghi chú: {item.note}</p>}
+                          </div>
+                          <div className="flex justify-end">
+                            <span className="font-bold text-lg text-orange-600">{formatPrice(item.totalPrice)}</span>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Fixed Bottom Section */}
+                <div className="border-t border-gray-100 bg-white">
+                  <div className="p-4">
+                    <div className="bg-gradient-to-r from-orange-50 to-red-50 p-4 rounded-lg">
+                      <div className="flex justify-between items-center mb-4">
+                        <span className="font-bold text-xl">Tổng cộng:</span>
+                        <span className="font-bold text-2xl text-orange-600">{formatPrice(getTotalCartPrice)}</span>
+                      </div>
+                      <Button
+                        className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 h-12 text-base font-semibold"
+                        onClick={handleStartCheckout}
+                      >
+                        🦊 Đặt hàng ngay
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Checkout Bottom Sheet */}
-      <div
-        className={`fixed top-0 bottom-0 left-0 right-0 bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-out ${
-          showCheckout ? "translate-y-0" : "translate-y-full"
-        }`}
-      >
-        <div className="max-w-md mx-auto h-full flex flex-col">
-          {/* Header */}
-          <div className="px-4 pb-4 pt-4 border-b border-gray-100">
-            <div className="flex items-center">
-              <Button variant="ghost" size="sm" className="h-8 w-8 p-0 mr-3" onClick={() => {setShowCheckout(false); setCashAmount(0)}}>
-                <ArrowLeft className="w-4 h-4" />
-              </Button>
-              <h2 className="text-lg font-bold text-orange-600 flex items-center gap-2 flex-1 justify-center">
-                <span>🦊</span>
-                {checkoutStep === 1
-                  ? "Chọn thanh toán"
-                  : paymentMethod === "cash"
-                    ? "Thanh toán tiền mặt"
-                    : "Chuyển khoản"}
-              </h2>
-              <div className="w-8"></div> {/* Spacer for centering */}
-            </div>
-          </div>
-
-          {/* Scrollable Content */}
-          <div className="flex-1 overflow-y-auto ">
-            <div className="p-4">
-              {checkoutStep === 1 && (
-                <div className="space-y-4">
-                  {/* Order Summary */}
-                  <div className="bg-orange-50 p-4 rounded-lg">
-                    <h3 className="font-semibold mb-2">Tóm tắt đơn hàng</h3>
-                    <div className="space-y-1 text-sm">
-                      {cart.map((item) => (
-                        <div
-                          key={item.id}
-                          className="border-b border-orange-100 pb-2 mb-2 last:border-b-0 last:pb-0 last:mb-0"
-                        >
-                          <div className="flex justify-between">
-                            <span>
-                              {item.milkTea.name} x{item.quantity}
-                            </span>
-                            <span>{formatPrice(item.totalPrice)}</span>
-                          </div>
-                          {item.note && <div className="text-xs text-orange-600 mt-1">Ghi chú: {item.note}</div>}
-                        </div>
-                      ))}
-                    </div>
-                    <Separator className="my-2" />
-                    <div className="flex justify-between font-bold text-orange-600">
-                      <span>Tổng cộng:</span>
-                      <span>{formatPrice(getTotalCartPrice())}</span>
-                    </div>
-                  </div>
-
-                  {/* Payment Methods */}
-                  <div>
-                    <Label className="text-sm font-semibold text-gray-700 mb-3 block">
-                      Chọn phương thức thanh toán
-                    </Label>
-                    <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="space-y-3">
-                      <div className="flex items-center space-x-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
-                        <RadioGroupItem value="cash" id="cash" />
-                        <Label htmlFor="cash" className="flex-1 cursor-pointer flex items-center gap-3">
-                          <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">💵</div>
-                          <div>
-                            <div className="font-medium">Tiền mặt</div>
-                            <div className="text-sm text-gray-500">Thanh toán khi nhận hàng</div>
-                          </div>
-                        </Label>
-                      </div>
-                      <div className="flex items-center space-x-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
-                        <RadioGroupItem value="transfer" id="transfer" />
-                        <Label htmlFor="transfer" className="flex-1 cursor-pointer flex items-center gap-3">
-                          <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">🏦</div>
-                          <div>
-                            <div className="font-medium">Chuyển khoản</div>
-                            <div className="text-sm text-gray-500">Thanh toán qua QR code</div>
-                          </div>
-                        </Label>
-                      </div>
-                    </RadioGroup>
-                  </div>
-                </div>
-              )}
-
-              {checkoutStep === 2 && paymentMethod === "cash" && (
-                <div className="text-center py-8 space-y-6">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Nhập số tiền khách đưa</label>
-                    <input 
-                      id="cash-input" 
-                      type="text" 
-                      className={`w-full h-12 border ${cashError ? 'border-red-500' : 'border-gray-200'} rounded-lg p-2`} 
-                      placeholder="Nhập số tiền khách đưa"
-                      value={formatInputNumber(cashAmount.toString())}
-                      onChange={handleCashInputChange}
-                      min="0"
-                    />
-                    {cashError && (
-                      <p className="text-red-500 text-sm mt-1">{cashError}</p>
-                    )}
-                    <div className="flex justify-center mt-4 mb-4">
-                      <p className="text-sm text-gray-500">
-                        {cashAmount > getTotalCartPrice() ? (
-                          <>Tiền thối: <span className="text-green-600 font-medium">{formatPrice(cashAmount - getTotalCartPrice())}</span></>
-                        ) : cashAmount > 0 ? (
-                          <>Còn thiếu: <span className="text-red-600 font-medium">{formatPrice(getTotalCartPrice() - cashAmount)}</span></>
-                        ) : (
-                          <>Tiền thối: {formatPrice(0)}</>
-                        )}
-                      </p>
-                    </div>
-                    <p className="text-gray-600">Đơn hàng của bạn đã được xác nhận</p>
-                    <p className="text-sm text-gray-500 mt-2">Tổng tiền: {formatPrice(getTotalCartPrice())}</p>
-                    <p className="text-sm text-gray-500">Thanh toán khi nhận hàng</p>
-                  </div>
-                </div>
-              )}
-
-              {checkoutStep === 2 && paymentMethod === "transfer" && (
-                <div className="text-center py-4 space-y-6">
-                  <div>
-                    <h3 className="text-lg font-bold text-gray-800 mb-2">Quét mã QR để thanh toán</h3>
-                    <p className="text-sm text-gray-600">
-                      Số tiền cần chuyển:{" "}
-                      <span className="font-bold text-orange-600">{formatPrice(getTotalCartPrice())}</span>
-                    </p>
-                  </div>
-
-                  {/* QR Code */}
-                  <div className="flex justify-center">
-                    <div className="w-48 h-48 bg-white border-2 border-gray-200 rounded-lg flex items-center justify-center">
-                      <div className="text-center">
-                        <div className="w-40 h-40 bg-gray-100 rounded-lg flex items-center justify-center mb-2">
-                          <Image alt="" src={`https://img.vietqr.io/image/VCB-9931782220-qr_only.png?amount=${getTotalCartPrice()}`} width={600} height={776} />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="bg-blue-50 p-4 rounded-lg text-left">
-                    <h4 className="font-semibold text-blue-800 mb-2">Thông tin chuyển khoản:</h4>
-                    <div className="text-sm space-y-1">
-                      <p>
-                        <span className="font-medium">Ngân hàng:</span> Vietcombank
-                      </p>
-                      <p>
-                        <span className="font-medium">Số tài khoản:</span> 1234567890
-                      </p>
-                      <p>
-                        <span className="font-medium">Chủ tài khoản:</span> Fox Milk Tea
-                      </p>
-                      <p>
-                        <span className="font-medium">Số tiền:</span>{" "}
-                        <span className="font-bold text-orange-600">{formatPrice(getTotalCartPrice())}</span>
-                      </p>
-                      {/* <p>
-                        <span className="font-medium">Nội dung:</span> Fox Order #{Date.now().toString().slice(-6)}
-                      </p> */}
-                    </div>
-                  </div>
-
-                  <div className="text-sm text-gray-500">
-                    <p>Sau khi chuyển khoản thành công,</p>
-                    <p>vui lòng nhấn &quot;Xác nhận hoàn tất&quot; bên dưới</p>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Fixed Bottom Section */}
-          {checkoutStep === 1 && (
-            <div className="border-t border-gray-100 bg-white">
-              <div className="p-4">
-                <Button
-                  onClick={handlePaymentMethodNext}
-                  disabled={!paymentMethod}
-                  className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 h-12 text-base font-semibold disabled:opacity-50"
-                >
-                  Tiếp theo
+      {activeSheet === 'checkout' && (
+        <div
+          className={`fixed top-0 bottom-0 left-0 right-0 bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-out ${
+            activeSheet === 'checkout' ? "translate-y-0" : "translate-y-full"
+          }`}
+        >
+          <div className="max-w-md mx-auto h-full flex flex-col">
+            {/* Header */}
+            <div className="px-4 pb-4 pt-4 border-b border-gray-100">
+              <div className="flex items-center">
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 mr-3" onClick={() => {setActiveSheet('none'); setCashAmount(0)}}>
+                  <ArrowLeft className="w-4 h-4" />
                 </Button>
+                <h2 className="text-lg font-bold text-orange-600 flex items-center gap-2 flex-1 justify-center">
+                  <span>🦊</span>
+                  {checkoutStep === 1
+                    ? "Chọn thanh toán"
+                    : paymentMethod === "cash"
+                      ? "Thanh toán tiền mặt"
+                      : "Chuyển khoản"}
+                </h2>
+                <div className="w-8"></div> {/* Spacer for centering */}
               </div>
             </div>
-          )}
 
-          {checkoutStep === 2 && (
-            <div className="border-t border-gray-100 bg-white">
+            {/* Scrollable Content */}
+            <div className="flex-1 overflow-y-auto ">
               <div className="p-4">
-                <Button
-                  onClick={handleCompleteOrder}
-                  className={`w-full h-12 text-base font-semibold ${
-                    paymentMethod === "cash"
-                      ? "bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
-                      : "bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"
-                  }`}
-                >
-                  Xác nhận hoàn tất
-                </Button>
+                {checkoutStep === 1 && (
+                  <div className="space-y-4">
+                    {/* Order Summary */}
+                    <div className="bg-orange-50 p-4 rounded-lg">
+                      <h3 className="font-semibold mb-2">Tóm tắt đơn hàng</h3>
+                      <div className="space-y-1 text-sm">
+                        {cart.map((item) => (
+                          <div
+                            key={item.id}
+                            className="border-b border-orange-100 pb-2 mb-2 last:border-b-0 last:pb-0 last:mb-0"
+                          >
+                            <div className="flex justify-between">
+                              <span>
+                                {item.milkTea.name} x{item.quantity}
+                              </span>
+                              <span>{formatPrice(item.totalPrice)}</span>
+                            </div>
+                            {item.note && <div className="text-xs text-orange-600 mt-1">Ghi chú: {item.note}</div>}
+                          </div>
+                        ))}
+                      </div>
+                      <Separator className="my-2" />
+                      <div className="flex justify-between font-bold text-orange-600">
+                        <span>Tổng cộng:</span>
+                        <span>{formatPrice(getTotalCartPrice)}</span>
+                      </div>
+                    </div>
+
+                    {/* Payment Methods */}
+                    <div>
+                      <Label className="text-sm font-semibold text-gray-700 mb-3 block">
+                        Chọn phương thức thanh toán
+                      </Label>
+                      <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="space-y-3">
+                        <div className="flex items-center space-x-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                          <RadioGroupItem value="cash" id="cash" />
+                          <Label htmlFor="cash" className="flex-1 cursor-pointer flex items-center gap-3">
+                            <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">💵</div>
+                            <div>
+                              <div className="font-medium">Tiền mặt</div>
+                              <div className="text-sm text-gray-500">Thanh toán khi nhận hàng</div>
+                            </div>
+                          </Label>
+                        </div>
+                        <div className="flex items-center space-x-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                          <RadioGroupItem value="transfer" id="transfer" />
+                          <Label htmlFor="transfer" className="flex-1 cursor-pointer flex items-center gap-3">
+                            <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">🏦</div>
+                            <div>
+                              <div className="font-medium">Chuyển khoản</div>
+                              <div className="text-sm text-gray-500">Thanh toán qua QR code</div>
+                            </div>
+                          </Label>
+                        </div>
+                      </RadioGroup>
+                    </div>
+                  </div>
+                )}
+
+                {checkoutStep === 2 && paymentMethod === "cash" && (
+                  <div className="text-center py-8 space-y-6">
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Nhập số tiền khách đưa</label>
+                      <input 
+                        id="cash-input" 
+                        type="text" 
+                        className={`w-full h-12 border ${cashError ? 'border-red-500' : 'border-gray-200'} rounded-lg p-2`} 
+                        placeholder="Nhập số tiền khách đưa"
+                        value={formatInputNumber(cashAmount.toString())}
+                        onChange={handleCashInputChange}
+                        min="0"
+                      />
+                      {cashError && (
+                        <p className="text-red-500 text-sm mt-1">{cashError}</p>
+                      )}
+                      <div className="flex justify-center mt-4 mb-4">
+                        <p className="text-sm text-gray-500">
+                          {cashAmount > getTotalCartPrice ? (
+                            <>Tiền thối: <span className="text-green-600 font-medium">{formatPrice(cashAmount - getTotalCartPrice)}</span></>
+                          ) : cashAmount > 0 ? (
+                            <>Còn thiếu: <span className="text-red-600 font-medium">{formatPrice(getTotalCartPrice - cashAmount)}</span></>
+                          ) : (
+                            <>Tiền thối: {formatPrice(0)}</>
+                          )}
+                        </p>
+                      </div>
+                      <p className="text-gray-600">Đơn hàng của bạn đã được xác nhận</p>
+                      <p className="text-sm text-gray-500 mt-2">Tổng tiền: {formatPrice(getTotalCartPrice)}</p>
+                      <p className="text-sm text-gray-500">Thanh toán khi nhận hàng</p>
+                    </div>
+                  </div>
+                )}
+
+                {checkoutStep === 2 && paymentMethod === "transfer" && (
+                  <div className="text-center py-4 space-y-6">
+                    <div>
+                      <h3 className="text-lg font-bold text-gray-800 mb-2">Quét mã QR để thanh toán</h3>
+                      <p className="text-sm text-gray-600">
+                        Số tiền cần chuyển:{" "}
+                        <span className="font-bold text-orange-600">{formatPrice(getTotalCartPrice)}</span>
+                      </p>
+                    </div>
+
+                    {/* QR Code */}
+                    <div className="flex justify-center">
+                      <div className="w-48 h-48 bg-white border-2 border-gray-200 rounded-lg flex items-center justify-center">
+                        <div className="text-center">
+                          <div className="w-40 h-40 bg-gray-100 rounded-lg flex items-center justify-center mb-2">
+                            <Image alt="" src={`https://img.vietqr.io/image/VCB-9931782220-qr_only.png?amount=${getTotalCartPrice}`} width={600} height={776} />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-blue-50 p-4 rounded-lg text-left">
+                      <h4 className="font-semibold text-blue-800 mb-2">Thông tin chuyển khoản:</h4>
+                      <div className="text-sm space-y-1">
+                        <p>
+                          <span className="font-medium">Ngân hàng:</span> Vietcombank
+                        </p>
+                        <p>
+                          <span className="font-medium">Số tài khoản:</span> 1234567890
+                        </p>
+                        <p>
+                          <span className="font-medium">Chủ tài khoản:</span> Fox Milk Tea
+                        </p>
+                        <p>
+                          <span className="font-medium">Số tiền:</span>{" "}
+                          <span className="font-bold text-orange-600">{formatPrice(getTotalCartPrice)}</span>
+                        </p>
+                        {/* <p>
+                          <span className="font-medium">Nội dung:</span> Fox Order #{Date.now().toString().slice(-6)}
+                        </p> */}
+                      </div>
+                    </div>
+
+                    <div className="text-sm text-gray-500">
+                      <p>Sau khi chuyển khoản thành công,</p>
+                      <p>vui lòng nhấn &quot;Xác nhận hoàn tất&quot; bên dưới</p>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
-          )}
+
+            {/* Fixed Bottom Section */}
+            {checkoutStep === 1 && (
+              <div className="border-t border-gray-100 bg-white">
+                <div className="p-4">
+                  <Button
+                    onClick={handlePaymentMethodNext}
+                    disabled={!paymentMethod}
+                    className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 h-12 text-base font-semibold disabled:opacity-50"
+                  >
+                    Tiếp theo
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {checkoutStep === 2 && (
+              <div className="border-t border-gray-100 bg-white">
+                <div className="p-4">
+                  <Button
+                    onClick={handleCompleteOrder}
+                    className={`w-full h-12 text-base font-semibold ${
+                      paymentMethod === "cash"
+                        ? "bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
+                        : "bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"
+                    }`}
+                  >
+                    Xác nhận hoàn tất
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   )
 }
