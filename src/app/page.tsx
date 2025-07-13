@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import {
   Plus,
   Minus,
@@ -22,23 +22,27 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Separator } from "@/components/ui/separator"
 import Image from "next/image"
+import { fetchApi, postApi, deleteApi, extractValuesByKey, putMultipleApi, putApi } from "@/utils/Helper"
 
 interface MilkTea {
+  documentId: string
   id: number
   name: string
   price: number
   description: string
-  image: string
+  image: { url: string }
   rating: number
 }
 
 interface Topping {
+  documentId: string
   id: number
   name: string
   price: number
 }
 
 interface CartItem {
+  documentId?: string
   id: number
   milkTea: MilkTea
   quantity: number
@@ -47,9 +51,11 @@ interface CartItem {
   ice: string
   note: string
   totalPrice: number
+  status: boolean
 }
 
 interface Order {
+  documentId?: string
   id: number
   items: CartItem[]
   totalPrice: number
@@ -58,80 +64,77 @@ interface Order {
   isCompleted: boolean
 }
 
-const milkTeas: MilkTea[] = [
-  {
-    id: 1,
-    name: "Fox's Classic Milk Tea",
-    price: 45000,
-    description: "Trà sữa truyền thống với hương vị đậm đà, được pha chế theo công thức bí mật của Fox",
-    image: "/images/logo/logo1.png?height=200&width=200",
-    rating: 4.8,
-  },
-  {
-    id: 2,
-    name: "Taro Fox Delight",
-    price: 50000,
-    description: "Trà sữa khoai môn thơm ngon với topping trân châu đen đặc biệt",
-    image: "/images/logo/logo1.png?height=200&width=200",
-    rating: 4.9,
-  },
-  {
-    id: 3,
-    name: "Brown Sugar Fox",
-    price: 55000,
-    description: "Trà sữa đường nâu tiger với lớp kem cheese béo ngậy trên mặt",
-    image: "/images/logo/logo1.png?height=200&width=200",
-    rating: 4.7,
-  },
-  {
-    id: 4,
-    name: "Matcha Fox Special",
-    price: 52000,
-    description: "Trà sữa matcha Nhật Bản cao cấp với vị đắng nhẹ và hậu ngọt",
-    image: "/images/logo/logo1.png?height=200&width=200",
-    rating: 4.6,
-  },
-  {
-    id: 5,
-    name: "Thai Fox Tea",
-    price: 48000,
-    description: "Trà sữa Thái Lan đậm đà với màu cam đặc trưng và vị ngọt thanh",
-    image: "/images/logo/logo1.png?height=200&width=200",
-    rating: 4.5,
-  },
-  {
-    id: 6,
-    name: "Chocolate Fox Dream",
-    price: 58000,
-    description: "Trà sữa chocolate đậm đà với topping whipped cream và chocolate chips",
-    image: "/images/logo/logo1.png?height=200&width=200",
-    rating: 4.8,
-  },
-]
+// const milkTeas: MilkTea[] = [
+//   {
+//     id: 1,
+//     name: "Fox's Classic Milk Tea",
+//     price: 45000,
+//     description: "Trà sữa truyền thống với hương vị đậm đà, được pha chế theo công thức bí mật của Fox",
+//     image: "/images/logo/logo1.png?height=200&width=200",
+//     rating: 4.8,
+//   },
+//   {
+//     id: 2,
+//     name: "Taro Fox Delight",
+//     price: 50000,
+//     description: "Trà sữa khoai môn thơm ngon với topping trân châu đen đặc biệt",
+//     image: "/images/logo/logo1.png?height=200&width=200",
+//     rating: 4.9,
+//   },
+//   {
+//     id: 3,
+//     name: "Brown Sugar Fox",
+//     price: 55000,
+//     description: "Trà sữa đường nâu tiger với lớp kem cheese béo ngậy trên mặt",
+//     image: "/images/logo/logo1.png?height=200&width=200",
+//     rating: 4.7,
+//   },
+//   {
+//     id: 4,
+//     name: "Matcha Fox Special",
+//     price: 52000,
+//     description: "Trà sữa matcha Nhật Bản cao cấp với vị đắng nhẹ và hậu ngọt",
+//     image: "/images/logo/logo1.png?height=200&width=200",
+//     rating: 4.6,
+//   },
+//   {
+//     id: 5,
+//     name: "Thai Fox Tea",
+//     price: 48000,
+//     description: "Trà sữa Thái Lan đậm đà với màu cam đặc trưng và vị ngọt thanh",
+//     image: "/images/logo/logo1.png?height=200&width=200",
+//     rating: 4.5,
+//   },
+//   {
+//     id: 6,
+//     name: "Chocolate Fox Dream",
+//     price: 58000,
+//     description: "Trà sữa chocolate đậm đà với topping whipped cream và chocolate chips",
+//     image: "/images/logo/logo1.png?height=200&width=200",
+//     rating: 4.8,
+//   },
+// ]
 
-const toppings: Topping[] = [
-  { id: 1, name: "Trân châu đen", price: 8000 },
-  { id: 2, name: "Trân châu trắng", price: 8000 },
-  { id: 3, name: "Thạch dừa", price: 10000 },
-  { id: 4, name: "Thạch cà phê", price: 10000 },
-  { id: 5, name: "Pudding", price: 12000 },
-  { id: 6, name: "Kem cheese", price: 15000 },
-  { id: 7, name: "Trân châu hoàng kim", price: 15000 },
-]
+// const toppings: Topping[] = [
+//   { id: 1, name: "Trân châu đen", price: 8000 },
+//   { id: 2, name: "Trân châu trắng", price: 8000 },
+//   { id: 3, name: "Thạch dừa", price: 10000 },
+//   { id: 4, name: "Thạch cà phê", price: 10000 },
+//   { id: 5, name: "Pudding", price: 12000 },
+//   { id: 6, name: "Kem cheese", price: 15000 },
+//   { id: 7, name: "Trân châu hoàng kim", price: 15000 },
+// ]
 
 const sweetnessLevels = [
-  { value: "0", label: "Không đường" },
-  { value: "30", label: "30% đường" },
-  { value: "50", label: "50% đường" },
-  { value: "70", label: "70% đường" },
-  { value: "100", label: "100% đường" },
+  { value: "50", label: "Ít ngọt" },
+  { value: "70", label: "Ngọt vừa" },
+  { value: "100", label: "Bình thường" },
 ]
 
 const iceLevels = [
   { value: "no-ice", label: "Không đá" },
   { value: "less-ice", label: "Ít đá" },
   { value: "normal-ice", label: "Đá bình thường" },
-  { value: "extra-ice", label: "Nhiều đá" },
 ]
 
 export default function FoxMilkTeaShop() {
@@ -139,7 +142,7 @@ export default function FoxMilkTeaShop() {
   const [quantities, setQuantities] = useState<{ [key: number]: number }>({})
   const [selectedMilkTea, setSelectedMilkTea] = useState<MilkTea | null>(null)
   const [selectedToppings, setSelectedToppings] = useState<Topping[]>([])
-  const [selectedSweetness, setSelectedSweetness] = useState("70")
+  const [selectedSweetness, setSelectedSweetness] = useState("50")
   const [selectedIce, setSelectedIce] = useState("normal-ice")
   const [selectedNote, setSelectedNote] = useState("")
   const [cart, setCart] = useState<CartItem[]>([])
@@ -151,7 +154,40 @@ export default function FoxMilkTeaShop() {
   const [paymentMethod, setPaymentMethod] = useState("")
   const [cashAmount, setCashAmount] = useState<number>(0)
   const [cashError, setCashError] = useState<string>("")
+  const [milkTeas, setMilkTeas] = useState<MilkTea[]>([])
+  const [toppings, setToppings] = useState<Topping[]>([])
   // const [orderCompleted, setOrderCompleted] = useState(false)
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await fetchApi(`${process.env.API_URL}${process.env.PREFIX_API}milk-tea-and-coffees?populate=image`).then(resp => resp?.data ?? []).catch(e => console.log(e))
+        setMilkTeas(response as MilkTea[])
+        const responseToppings = await fetchApi(`${process.env.API_URL}${process.env.PREFIX_API}toppings`).then(resp => resp?.data ?? []).catch(e => console.log(e))
+        setToppings(responseToppings as Topping[])
+        
+        const responseCartItems = await fetchApi(`${process.env.API_URL}${process.env.PREFIX_API}cart-items?populate=*&filters[isOrdered]=false`).then(resp => resp?.data ?? []).catch(e => console.log(e))
+        setCart(responseCartItems as CartItem[])
+      } catch (err) {
+        console.log(err)
+      }
+    }
+    
+    fetchData()
+  }, [])
+
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        const response = await fetchApi(`${process.env.API_URL}${process.env.PREFIX_API}orders?populate[items][populate]=*`).then(resp => resp?.data ?? []).catch(e => console.log(e))
+        setOrders(response as Order[])
+      } catch (err) {
+        console.log(err)
+      }
+    }
+    
+    fetchOrders()
+  }, [])
 
   const getQuantity = (id: number) => quantities[id] || 0
 
@@ -191,39 +227,62 @@ export default function FoxMilkTeaShop() {
       year: "numeric",
       hour: "2-digit",
       minute: "2-digit",
-    }).format(date)
+    }).format(new Date(date))
   }
 
   const handleAddToCart = (milkTea: MilkTea) => {
     setSelectedMilkTea(milkTea)
     setSelectedToppings([])
-    setSelectedSweetness("70")
+    setSelectedSweetness("50")
     setSelectedIce("normal-ice")
     setSelectedNote("")
     setShowCustomization(true)
   }
 
-  const confirmAddToCart = () => {
+  const confirmAddToCart = async () => {
     if (!selectedMilkTea) return
 
     const quantity = getQuantity(selectedMilkTea.id)
     const toppingsPrice = selectedToppings.reduce((sum, topping) => sum + topping.price, 0)
     const totalPrice = (selectedMilkTea.price + toppingsPrice) * quantity
 
-    const cartItem: CartItem = {
-      id: Date.now(),
-      milkTea: selectedMilkTea,
+    const dataCart = {
+      milkTea: {
+        connect: [{ documentId: selectedMilkTea.documentId }],
+      },
+      toppings: {
+        connect: selectedToppings.map((t) => ({ documentId: t.documentId })),
+      },
       quantity,
-      toppings: selectedToppings,
       sweetness: sweetnessLevels.find((s) => s.value === selectedSweetness)?.label || "",
       ice: iceLevels.find((i) => i.value === selectedIce)?.label || "",
       note: selectedNote,
       totalPrice,
+    };
+
+    for (const key in dataCart) {
+      const value = (dataCart as Record<string, unknown>)[key];
+      if (
+        value &&
+        typeof value === "object" &&
+        value !== null &&
+        "connect" in value &&
+        Array.isArray((value as { connect: unknown[] }).connect) &&
+        (value as { connect: unknown[] }).connect.length === 0
+      ) {
+        delete (dataCart as Record<string, unknown>)[key];
+      }
     }
 
-    setCart((prev) => [...prev, cartItem])
-    setShowCustomization(false)
-    setSelectedMilkTea(null)
+    await postApi(`${process.env.API_URL}${process.env.PREFIX_API}cart-items`, {data: dataCart}).then(async () => 
+    {
+      const responseCartItems = await fetchApi(`${process.env.API_URL}${process.env.PREFIX_API}cart-items?populate=*&filters[isOrdered]=false`).then(resp => resp?.data ?? []).catch(e => console.log(e))
+      setCart(responseCartItems as CartItem[])
+
+      setShowCustomization(false)
+      setSelectedMilkTea(null)
+    }
+    ).catch(err => console.log(err));
 
     // Reset quantity về 0
     if (selectedMilkTea) {
@@ -246,8 +305,14 @@ export default function FoxMilkTeaShop() {
     return cart.reduce((sum, item) => sum + item.totalPrice, 0)
   }
 
-  const removeFromCart = (itemId: number) => {
-    setCart((prev) => prev.filter((item) => item.id !== itemId))
+  const removeFromCart = async (itemId: string) => {
+    // setCart((prev) => prev.filter((item) => item.id !== itemId))
+    await deleteApi(`${process.env.API_URL}${process.env.PREFIX_API}cart-items/${itemId}`).then(async () => 
+      {
+        const responseCartItems = await fetchApi(`${process.env.API_URL}${process.env.PREFIX_API}cart-items?populate=*&filters[isOrdered]=false`).then(resp => resp?.data ?? []).catch(e => console.log(e))
+        setCart(responseCartItems as CartItem[])
+      }
+      ).catch(err => console.log(err));
   }
 
   const handleStartCheckout = () => {
@@ -264,7 +329,7 @@ export default function FoxMilkTeaShop() {
     }
   }
 
-  const handleCompleteOrder = () => {
+  const handleCompleteOrder = async () => {
     if (paymentMethod === "cash") {
       if (cashAmount === 0) {
         setCashError("Vui lòng nhập số tiền khách đưa")
@@ -278,33 +343,49 @@ export default function FoxMilkTeaShop() {
     setCashError("")
 
     // Tạo đơn hàng mới
-    const newOrder: Order = {
-      id: Date.now(),
-      items: [...cart],
+    const dataOrders = {
+      items: {
+        connect: cart.map((t) => ({ documentId: t.documentId })),
+      },
       totalPrice: getTotalCartPrice(),
       paymentMethod: paymentMethod === "cash" ? "Tiền mặt" : "Chuyển khoản",
       orderTime: new Date(),
       isCompleted: false,
-    }
+    };
+    await postApi(`${process.env.API_URL}${process.env.PREFIX_API}orders`,  {data: dataOrders})
+      .then( async () => {
+        const response = await fetchApi(`${process.env.API_URL}${process.env.PREFIX_API}orders?populate[items][populate]=*`).then(resp => resp?.data ?? []).catch(e => console.log(e))
+        setOrders(response as Order[])
+      })
 
-    setOrders((prev) => [...prev, newOrder])
+    // setOrders((prev) => [...prev, newOrder])
 
     // Reset cart sau 200 ms
-    setTimeout(() => {
-      setCart([])
-      setShowCheckout(false)
-      setCheckoutStep(1)
-      setPaymentMethod("")
-      setCashAmount(0)
-      setCashError("")
+    setTimeout(async() => {
+      // setCart([])
+      // console.log(extractValuesByKey(cart, "documentId"));
+      await putMultipleApi(`${process.env.API_URL}${process.env.PREFIX_API}put-cart_items`, {documentIds: extractValuesByKey(cart, "documentId") as string[]}).then(async () => 
+        {
+          setCart([])
+          setShowCheckout(false)
+          setCheckoutStep(1)
+          setPaymentMethod("")
+          setCashAmount(0)
+          setCashError("")
+        }
+        ).catch(err => console.log(err));
       // setOrderCompleted(false)
     }, 200)
   }
 
-  const toggleOrderStatus = (orderId: number) => {
+  const toggleOrderStatus = async (orderId: Order) => {
     setOrders((prev) =>
-      prev.map((order) => (order.id === orderId ? { ...order, isCompleted: !order.isCompleted } : order)),
+      prev.map((order) => (order.documentId === orderId.documentId ? { ...order, isCompleted: !order.isCompleted } : order)),
     )
+
+    await putApi(`${process.env.API_URL}${process.env.PREFIX_API}orders/${orderId.documentId}`,{
+      data: {isCompleted: !orderId.isCompleted}
+    })
   }
 
   // Sắp xếp đơn hàng: inactive trước, sau đó theo thời gian cũ nhất
@@ -312,7 +393,9 @@ export default function FoxMilkTeaShop() {
     if (a.isCompleted !== b.isCompleted) {
       return a.isCompleted ? 1 : -1 // inactive (false) trước
     }
-    return a.orderTime.getTime() - b.orderTime.getTime() // cũ nhất trước
+    const aTime = new Date(a.orderTime).getTime();
+    const bTime = new Date(b.orderTime).getTime();
+    return aTime - bTime // cũ nhất trước
   })
 
   return (
@@ -365,7 +448,7 @@ export default function FoxMilkTeaShop() {
                   <div className="flex items-center">
                     <div className="w-24 h-24 flex items-center justify-center">
                       <img
-                        src={milkTea.image || "/images/logo/logo1.png"}
+                        src={milkTea.image.url || "/images/logo/logo1.png"}
                         alt={milkTea.name}
                         className="w-20 h-20 object-cover rounded-lg"
                       />
@@ -468,7 +551,7 @@ export default function FoxMilkTeaShop() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => toggleOrderStatus(order.id)}
+                        onClick={() => order.documentId && toggleOrderStatus(order)}
                         className={`h-8 w-8 p-0 ${order.isCompleted ? "text-green-600 hover:bg-green-100" : "text-orange-600 hover:bg-orange-100"}`}
                       >
                         {order.isCompleted ? <CheckCircle className="w-5 h-5" /> : <Circle className="w-5 h-5" />}
@@ -753,7 +836,7 @@ export default function FoxMilkTeaShop() {
                             variant="ghost"
                             size="sm"
                             className="h-8 w-8 p-0 text-red-500 hover:bg-red-50"
-                            onClick={() => removeFromCart(item.id)}
+                            onClick={() => removeFromCart(item.documentId as string)}
                           >
                             X
                           </Button>
