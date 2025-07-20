@@ -23,6 +23,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Separator } from "@/components/ui/separator"
 import Image from "next/image"
 import { fetchApi, postApi, deleteApi, extractValuesByKey, putMultipleApi, putApi } from "@/utils/Helper"
+import { TagInput } from "@/components/ui/tagInput"
 
 interface MilkTea {
   documentId: string
@@ -64,6 +65,12 @@ interface Order {
   isCompleted: boolean
 }
 
+interface Voucher {
+  name: string
+  value: number
+  type: string
+}
+
 const sweetnessLevels = [
   { value: "50", label: "Ít ngọt" },
   { value: "70", label: "Ngọt vừa" },
@@ -93,21 +100,32 @@ export default function FoxMilkTeaShop() {
   const [cashError, setCashError] = useState<string>("")
   const [milkTeas, setMilkTeas] = useState<MilkTea[]>([])
   const [toppings, setToppings] = useState<Topping[]>([])
+  const [vouchers, setVouchers] = useState<Voucher[]>([])
+  const [selectedVouchers, setSelectedVouchers] = useState<Voucher | null>(null)
   // const [orderCompleted, setOrderCompleted] = useState(false)
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [milkTeasRes, toppingsRes, cartRes, ordersRes] = await Promise.all([
+        const [milkTeasRes, toppingsRes, cartRes, ordersRes, voucherRes] = await Promise.all([
           fetchApi(`${process.env.API_URL}${process.env.PREFIX_API}milk-tea-and-coffees?populate=image`).then(resp => resp?.data ?? []).catch(e => console.log(e)),
           fetchApi(`${process.env.API_URL}${process.env.PREFIX_API}toppings`).then(resp => resp?.data ?? []).catch(e => console.log(e)),
           fetchApi(`${process.env.API_URL}${process.env.PREFIX_API}cart-items?populate=*&filters[isOrdered]=false`).then(resp => resp?.data ?? []).catch(e => console.log(e)),
           fetchApi(`${process.env.API_URL}${process.env.PREFIX_API}orders?populate[items][populate]=*`).then(resp => resp?.data ?? []).catch(e => console.log(e)),
+          fetchApi(`${process.env.API_URL}${process.env.PREFIX_API}vouchers`).then(resp => resp?.data ?? []).catch(e => console.log(e)),
         ])
         setMilkTeas(milkTeasRes as MilkTea[])
         setToppings(toppingsRes as Topping[])
         setCart(cartRes as CartItem[])
         setOrders(ordersRes as Order[])
+        if (Array.isArray(voucherRes)) {
+          setVouchers(voucherRes.map((voucher) => ({
+            id: voucher.id,
+            name: voucher.name,
+            value: voucher.value,
+            type: voucher.type
+          })) as Voucher[])
+        }
       } catch (err) {
         console.log(err)
       }
@@ -165,13 +183,25 @@ export default function FoxMilkTeaShop() {
     setActiveSheet('customization')
   }, [])
 
+  const calcPrice = (price: number, value: number, type: string) => {
+      switch (type){
+        case "thousand":
+          price = price - value          
+          break;
+        default:
+          price = price - (price * (value / 100))
+      }
+    return price;
+  }
+
   const confirmAddToCart = async () => {
     if (!selectedMilkTea) return
-
     const quantity = getQuantity(selectedMilkTea.id)
     const toppingsPrice = selectedToppings.reduce((sum, topping) => sum + topping.price, 0)
-    const totalPrice = (selectedMilkTea.price + toppingsPrice) * quantity
-
+    let totalPrice = (selectedMilkTea.price + toppingsPrice) * quantity
+    if(selectedVouchers){
+      totalPrice = calcPrice(totalPrice, selectedVouchers.value, selectedVouchers.type)
+    }
     const dataCart = {
       milkTea: {
         connect: [{ documentId: selectedMilkTea.documentId }],
@@ -302,6 +332,18 @@ export default function FoxMilkTeaShop() {
       data: {isCompleted: !orderId.isCompleted}
     })
   }
+
+  const handleTagsChange = (updatedTags: { name: string; value?: number; type?: string }[]) => {
+    setSelectedVouchers(
+      updatedTags.length > 0
+        ? {
+            name: updatedTags[0].name,
+            value: updatedTags[0].value ?? 0,
+            type: updatedTags[0].type ?? ""
+          }
+        : null
+    );
+  };
 
   // Sắp xếp đơn hàng: inactive trước, sau đó theo thời gian cũ nhất
   const sortedOrders = useMemo(() => {
@@ -659,6 +701,12 @@ export default function FoxMilkTeaShop() {
                       />
                       <div className="text-xs text-gray-400 mt-1 text-right">{selectedNote.length}/200 ký tự</div>
                     </div>
+                    {/* Voucher */}
+                    <div>
+                      <Label className="text-sm font-semibold text-gray-700">Voucher</Label>
+                      <TagInput initialTags={vouchers}
+                        onTagsChange={handleTagsChange} />
+                    </div>
                   </div>
                 </div>
 
@@ -687,8 +735,14 @@ export default function FoxMilkTeaShop() {
                         <span>Tổng cộng:</span>
                         <span>
                           {formatPrice(
-                            (selectedMilkTea.price + selectedToppings.reduce((sum, t) => sum + t.price, 0)) *
-                              getQuantity(selectedMilkTea.id),
+                              selectedVouchers 
+                              ? 
+                                calcPrice((selectedMilkTea.price + selectedToppings.reduce((sum, t) => sum + t.price, 0)) *
+                                getQuantity(selectedMilkTea.id), selectedVouchers.value, selectedVouchers.type) 
+                              :
+                                (selectedMilkTea.price + selectedToppings.reduce((sum, t) => sum + t.price, 0)) *
+                                getQuantity(selectedMilkTea.id)
+                            ,
                           )}
                         </span>
                       </div>
