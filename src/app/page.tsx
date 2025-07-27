@@ -2,10 +2,7 @@
 
 import { useEffect, useState, useMemo, useCallback } from "react"
 import {
-  Plus,
-  Minus,
   ShoppingCart,
-  Star,
   ArrowLeft,
   Clock,
   CheckCircle,
@@ -16,7 +13,6 @@ import {
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -24,6 +20,7 @@ import { Separator } from "@/components/ui/separator"
 import Image from "next/image"
 import { fetchApi, postApi, deleteApi, extractValuesByKey, putMultipleApi, putApi } from "@/utils/Helper"
 import { TagInput } from "@/components/ui/tagInput"
+import MilkTeaList from "@/components/MilkTeaList"
 
 interface MilkTea {
   documentId: string
@@ -99,6 +96,7 @@ export default function FoxMilkTeaShop() {
   const [cashAmount, setCashAmount] = useState<number>(0)
   const [cashError, setCashError] = useState<string>("")
   const [milkTeas, setMilkTeas] = useState<MilkTea[]>([])
+  const [isLoadingMilkTeas, setIsLoadingMilkTeas] = useState<boolean>(false)
   const [toppings, setToppings] = useState<Topping[]>([])
   const [vouchers, setVouchers] = useState<Voucher[]>([])
   const [selectedVouchers, setSelectedVouchers] = useState<Voucher | null>(null)
@@ -107,17 +105,37 @@ export default function FoxMilkTeaShop() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [milkTeasRes, toppingsRes, cartRes, ordersRes, voucherRes] = await Promise.all([
-          fetchApi(`${process.env.API_URL}${process.env.PREFIX_API}milk-tea-and-coffees?populate=image`).then(resp => resp?.data ?? []).catch(e => console.log(e)),
-          fetchApi(`${process.env.API_URL}${process.env.PREFIX_API}toppings`).then(resp => resp?.data ?? []).catch(e => console.log(e)),
-          fetchApi(`${process.env.API_URL}${process.env.PREFIX_API}cart-items?populate=*&filters[isOrdered]=false`).then(resp => resp?.data ?? []).catch(e => console.log(e)),
-          fetchApi(`${process.env.API_URL}${process.env.PREFIX_API}orders?populate[items][populate]=*`).then(resp => resp?.data ?? []).catch(e => console.log(e)),
-          fetchApi(`${process.env.API_URL}${process.env.PREFIX_API}vouchers`).then(resp => resp?.data ?? []).catch(e => console.log(e)),
-        ])
+        // Load milk teas first
+        setIsLoadingMilkTeas(true)
+        const milkTeasRes = await fetchApi(`${process.env.API_URL}${process.env.PREFIX_API}milk-tea-and-coffees?populate=image`)
+          .then(resp => resp?.data ?? [])
+          .catch(e => console.log(e))
         setMilkTeas(milkTeasRes as MilkTea[])
+        setIsLoadingMilkTeas(false)
+
+        // Load toppings second
+        const toppingsRes = await fetchApi(`${process.env.API_URL}${process.env.PREFIX_API}toppings`)
+          .then(resp => resp?.data ?? [])
+          .catch(e => console.log(e))
         setToppings(toppingsRes as Topping[])
+
+        // Load cart items third
+        const cartRes = await fetchApi(`${process.env.API_URL}${process.env.PREFIX_API}cart-items?populate=*&filters[isOrdered]=false`)
+          .then(resp => resp?.data ?? [])
+          .catch(e => console.log(e))
         setCart(cartRes as CartItem[])
+
+        // Load orders fourth
+        const ordersRes = await fetchApi(`${process.env.API_URL}${process.env.PREFIX_API}orders?populate[items][populate]=*`)
+          .then(resp => resp?.data ?? [])
+          .catch(e => console.log(e))
         setOrders(ordersRes as Order[])
+
+        // Load vouchers last
+        const voucherRes = await fetchApi(`${process.env.API_URL}${process.env.PREFIX_API}vouchers`)
+          .then(resp => resp?.data ?? [])
+          .catch(e => console.log(e))
+        
         if (Array.isArray(voucherRes)) {
           setVouchers(voucherRes.map((voucher) => ({
             id: voucher.id,
@@ -396,76 +414,14 @@ export default function FoxMilkTeaShop() {
       {/* Tab Content */}
       {activeTab === "order" ? (
         /* Product Grid */
-        <div className="p-4 max-w-md mx-auto pb-24">
-          <div className="grid gap-4">
-            {milkTeas.map((milkTea) => (
-              <Card
-                key={milkTea.id}
-                className="overflow-hidden border-orange-200 shadow-md hover:shadow-lg transition-shadow"
-              >
-                <CardContent className="p-0">
-                  <div className="flex items-center">
-                    <div className="w-24 h-24 flex items-center justify-center pl-3">
-                      <img
-                        src={milkTea.image.url || "/images/logo/logo1.png"}
-                        alt={milkTea.name}
-                        className="w-20 h-20 object-cover rounded-lg"
-                      />
-                    </div>
-                    <div className="flex-1 p-3 pl-2">
-                      <div className="flex items-start justify-between mb-1">
-                        <h3 className="font-semibold text-gray-800 text-sm leading-tight">{milkTea.name}</h3>
-                        <div className="flex items-center gap-1 ml-2">
-                          <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                          <span className="text-xs text-gray-600">{milkTea.rating}</span>
-                        </div>
-                      </div>
-                      <p className="text-xs text-gray-600 mb-2 line-clamp-2">{milkTea.description}</p>
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="font-bold text-orange-600">{formatPrice(milkTea.price)}</span>
-                        <div className="flex items-center gap-2">
-                          <div className="flex items-center border border-orange-300 rounded-lg">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-7 w-7 p-0 hover:bg-orange-100"
-                              onClick={() => updateQuantity(milkTea.id, getQuantity(milkTea.id) - 1)}
-                            >
-                              <Minus className="w-3 h-3" />
-                            </Button>
-                            <Input
-                              type="number"
-                              value={getQuantity(milkTea.id)}
-                              onChange={(e) => updateQuantity(milkTea.id, parseInt(e.target.value, 10) || 0)}
-                              className="w-8 h-7 text-center border-0 text-xs p-0"
-                              min="0"
-                            />
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-7 w-7 p-0 hover:bg-orange-100"
-                              onClick={() => updateQuantity(milkTea.id, getQuantity(milkTea.id) + 1)}
-                            >
-                              <Plus className="w-3 h-3" />
-                            </Button>
-                          </div>
-                          <Button
-                            size="sm"
-                            className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white h-7 px-3 text-xs disabled:opacity-50 disabled:cursor-not-allowed"
-                            onClick={() => handleAddToCart(milkTea)}
-                            disabled={getQuantity(milkTea.id) === 0}
-                          >
-                            Chọn
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
+        <MilkTeaList
+          milkTeas={milkTeas}
+          isLoading={isLoadingMilkTeas}
+          getQuantity={getQuantity}
+          updateQuantity={updateQuantity}
+          handleAddToCart={handleAddToCart}
+          formatPrice={formatPrice}
+        />
       ) : (
         /* Order Management */
         <div className="p-4 max-w-md mx-auto pb-24">
