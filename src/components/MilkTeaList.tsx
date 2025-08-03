@@ -40,7 +40,7 @@ export default function MilkTeaList({
           {Array.from({ length: 6 }).map((_, index) => (
             <Card
               key={`loading-${index}`}
-              className="overflow-hidden border-orange-200 shadow-md animate-pulse"
+              className="overflow-hidden border-green-200 shadow-md animate-pulse"
             >
               <CardContent className="p-0">
                 <div className="flex items-center">
@@ -60,7 +60,7 @@ export default function MilkTeaList({
                     <div className="flex items-center justify-between gap-2">
                       <div className="h-4 bg-gray-300 rounded w-20"></div>
                       <div className="flex items-center gap-2">
-                        <div className="flex items-center border border-orange-300 rounded-lg">
+                        <div className="flex items-center border border-green-300 rounded-lg">
                           <div className="h-7 w-7 bg-gray-300 rounded"></div>
                           <div className="w-8 h-7 bg-gray-300 rounded"></div>
                           <div className="h-7 w-7 bg-gray-300 rounded"></div>
@@ -84,13 +84,13 @@ export default function MilkTeaList({
         {milkTeas.map((milkTea) => (
           <Card
             key={milkTea.id}
-            className="overflow-hidden border-orange-200 shadow-md hover:shadow-lg transition-shadow"
+            className="overflow-hidden border-green-200 shadow-md hover:shadow-lg transition-shadow"
           >
             <CardContent className="p-0">
               <div className="flex items-center">
                 <div className="w-24 h-24 flex items-center justify-center pl-3">
                   <img
-                    src={milkTea.image.url || "/images/logo/logo1.png"}
+                    src={milkTea.image.url || "/images/logo/logo2.png"}
                     alt={milkTea.name}
                     className="w-20 h-20 object-cover rounded-lg"
                   />
@@ -105,13 +105,13 @@ export default function MilkTeaList({
                   </div>
                   <p className="text-xs text-gray-600 mb-2 line-clamp-2">{milkTea.description}</p>
                   <div className="flex items-center justify-between gap-2">
-                    <span className="font-bold text-orange-600">{formatPrice(milkTea.price)}</span>
+                    <span className="font-bold text-green-600">{formatPrice(milkTea.price)}</span>
                     <div className="flex items-center gap-2">
-                      <div className="flex items-center border border-orange-300 rounded-lg">
+                      <div className="flex items-center border border-green-300 rounded-lg">
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-7 w-7 p-0 hover:bg-orange-100"
+                          className="h-7 w-7 p-0 hover:bg-green-100"
                           onClick={() => updateQuantity(milkTea.id, getQuantity(milkTea.id) - 1)}
                         >
                           <Minus className="w-3 h-3" />
@@ -126,7 +126,7 @@ export default function MilkTeaList({
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-7 w-7 p-0 hover:bg-orange-100"
+                          className="h-7 w-7 p-0 hover:bg-green-100"
                           onClick={() => updateQuantity(milkTea.id, getQuantity(milkTea.id) + 1)}
                         >
                           <Plus className="w-3 h-3" />
@@ -134,7 +134,7 @@ export default function MilkTeaList({
                       </div>
                       <Button
                         size="sm"
-                        className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white h-7 px-3 text-xs disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white h-7 px-3 text-xs disabled:opacity-50 disabled:cursor-not-allowed"
                         onClick={() => handleAddToCart(milkTea)}
                         disabled={getQuantity(milkTea.id) === 0}
                       >

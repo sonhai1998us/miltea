@@ -26,7 +26,7 @@ export const TagInput: React.FC<TagInputProps> = ({ initialTags, onTagsChange })
     const foundTag = initialTags.find(tag => tag.name === input);
     
     if(foundTag && tags.find(tag => tag.name === foundTag.name)){
-      setError("Mã đã được sử dụng!")
+      setError("Mã giảm giá đã được sử dụng!")
       return
     }
     if(foundTag){
@@ -34,7 +34,7 @@ export const TagInput: React.FC<TagInputProps> = ({ initialTags, onTagsChange })
       setError("")
     }
     if(!foundTag){
-      setError("Mã không tồn tại!")
+      setError("Mã giảm giá không tồn tại!")
     }
     // const [name] = input.split(":");
     // if (name) {
@@ -53,7 +53,7 @@ export const TagInput: React.FC<TagInputProps> = ({ initialTags, onTagsChange })
         {tags.map((tag, index) => (
           <span
             key={index}
-            className="flex items-center px-2 py-1 bg-orange-400 text-white rounded-full text-sm"
+            className="flex items-center px-2 py-1 bg-green-600 text-white rounded-full text-sm"
           >
             {tag.name}
             <button
@@ -68,16 +68,16 @@ export const TagInput: React.FC<TagInputProps> = ({ initialTags, onTagsChange })
       <div className="flex gap-2">
         <input
           type="text"
-          placeholder="Nhập voucher"
+          placeholder="Nhập mã giảm giá"
           value={input}
           onChange={(e) => setInput(e.target.value)}
           disabled={tags.length > 0 ? true : false }
           onKeyDown={(e) => e.key === "Enter" && addTag()}
-          className="flex-grow px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:text-gray-400"
+          className="flex-grow px-3 py-2 border border-green-200 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 disabled:text-gray-400"
         />
         <button
           onClick={addTag}
-          className="px-4 py-2 bg-orange-400 text-white rounded-md hover:bg-blue-600"
+          className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
         >
           Add
         </button>

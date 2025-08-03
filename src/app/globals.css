@@ -189,13 +189,13 @@
 
 /* Handle */
 ::-webkit-scrollbar-thumb {
-  background: orange;
+  background: #059669;
   border-radius: 5px;
 }
 
 /* Handle on hover */
 ::-webkit-scrollbar-thumb:hover {
-  background: #555;
+  background: #047857;
 }
 
 @layer base {

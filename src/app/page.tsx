@@ -376,21 +376,21 @@ export default function FoxMilkTeaShop() {
   }, [orders])
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-red-50">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-50">
       {/* Header */}
-      <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white p-4 sticky top-0 z-40 shadow-lg">
+      <div className="bg-gradient-to-r from-green-600 to-emerald-600 text-white p-4 sticky top-0 z-40 shadow-lg">
         <div className="flex items-center justify-between max-w-md mx-auto">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-full flex items-center justify-center">
               <img
-                src={"/images/logo/logo1.png"}
+                src={"/images/logo/logo3.png"}
                 alt={""}
-                className="w-16 h-16 object-cover rounded-lg"
+                className="w-16 h-16 object-contain rounded-lg"
               />
             </div>
             <div>
-              <h1 className="font-bold text-lg">1996 Milk Tea</h1>
-              <p className="text-xs opacity-90">Coffee & Milk Tea</p>
+              <h1 className="font-bold text-lg">Lá và Sương</h1>
+              <p className="text-xs opacity-90">Cà phê - Trà sữa - Trà trái cây</p>
             </div>
           </div>
           {activeTab === "order" && (
@@ -402,7 +402,7 @@ export default function FoxMilkTeaShop() {
             >
               <ShoppingCart className="w-5 h-5" />
               {cart.length > 0 && (
-                <Badge className="absolute -top-2 -right-2 bg-yellow-400 text-orange-800 text-xs px-1.5 py-0.5">
+                <Badge className="absolute -top-2 -right-2 bg-amber-400 text-green-800 text-xs px-1.5 py-0.5">
                   {cart.length}
                 </Badge>
               )}
@@ -427,12 +427,12 @@ export default function FoxMilkTeaShop() {
         <div className="p-4 max-w-md mx-auto pb-24">
           {orders.length === 0 ? (
             <div className="text-center py-12">
-              <div className="text-6xl mb-4">🦊</div>
+              <div className="text-6xl mb-4">🌿</div>
               <p className="text-gray-500 text-lg mb-2">Chưa có đơn hàng nào</p>
-              <p className="text-sm text-gray-400">Hãy đặt trà sữa yêu thích nhé!</p>
+              <p className="text-sm text-gray-400">Hãy thưởng thức hương vị tự nhiên của Lá và Sương!</p>
               <Button
                 onClick={() => setActiveTab("order")}
-                className="mt-4 bg-gradient-to-r from-orange-500 to-red-500"
+                className="mt-4 bg-gradient-to-r from-green-600 to-emerald-600"
               >
                 Đặt trà sữa ngay
               </Button>
@@ -442,7 +442,7 @@ export default function FoxMilkTeaShop() {
               {sortedOrders.map((order) => (
                 <Card
                   key={order.id}
-                  className={`border-2 ${order.isCompleted ? "border-green-200 bg-green-50" : "border-orange-200"}`}
+                  className={`border-2 ${order.isCompleted ? "border-green-200 bg-green-50" : "border-green-200"}`}
                 >
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between mb-3">
@@ -451,7 +451,7 @@ export default function FoxMilkTeaShop() {
                           <h3 className="font-semibold text-gray-800">Đơn hàng #{order.id.toString().slice(-6)}</h3>
                           <Badge
                             className={
-                              order.isCompleted ? "bg-green-100 text-green-800" : "bg-orange-100 text-orange-800"
+                              order.isCompleted ? "bg-green-100 text-green-800" : "bg-green-100 text-green-800"
                             }
                           >
                             {order.isCompleted ? "Hoàn thành" : "Đang xử lý"}
@@ -467,7 +467,7 @@ export default function FoxMilkTeaShop() {
                         variant="ghost"
                         size="sm"
                         onClick={() => order.documentId && toggleOrderStatus(order)}
-                        className={`h-8 w-8 p-0 ${order.isCompleted ? "text-green-600 hover:bg-green-100" : "text-orange-600 hover:bg-orange-100"}`}
+                        className={`h-8 w-8 p-0 ${order.isCompleted ? "text-green-600 hover:bg-green-100" : "text-green-600 hover:bg-green-100"}`}
                       >
                         {order.isCompleted ? <CheckCircle className="w-5 h-5" /> : <Circle className="w-5 h-5" />}
                       </Button>
@@ -480,12 +480,12 @@ export default function FoxMilkTeaShop() {
                             <span className="font-medium">
                               {item.milkTea.name} x{item.quantity}
                             </span>
-                            <span className="text-orange-600">{formatPrice(item.totalPrice)}</span>
+                            <span className="text-green-600">{formatPrice(item.totalPrice)}</span>
                           </div>
                           <div className="text-xs text-gray-500 ml-2">
                             {item.sweetness} • {item.ice}
                             {item.toppings.length > 0 && ` • ${item.toppings.map((t) => t.name).join(", ")}`}
-                            {item.note && <div className="text-orange-600 mt-1">Ghi chú: {item.note}</div>}
+                            {item.note && <div className="text-green-600 mt-1">Ghi chú: {item.note}</div>}
                           </div>
                         </div>
                       ))}
@@ -495,7 +495,7 @@ export default function FoxMilkTeaShop() {
 
                     <div className="flex justify-between items-center">
                       <span className="font-bold text-lg">Tổng cộng:</span>
-                      <span className="font-bold text-xl text-orange-600">{formatPrice(order.totalPrice)}</span>
+                      <span className="font-bold text-xl text-green-600">{formatPrice(order.totalPrice)}</span>
                     </div>
                   </CardContent>
                 </Card>
@@ -513,7 +513,7 @@ export default function FoxMilkTeaShop() {
               onClick={() => setActiveTab("order")}
               className={`flex-1 py-3 px-4 flex flex-col items-center gap-1 transition-colors ${
                 activeTab === "order"
-                  ? "text-orange-600 bg-orange-50"
+                  ? "text-green-600 bg-green-50"
                   : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
               }`}
             >
@@ -524,7 +524,7 @@ export default function FoxMilkTeaShop() {
               onClick={() => setActiveTab("manage")}
               className={`flex-1 py-3 px-4 flex flex-col items-center gap-1 transition-colors relative ${
                 activeTab === "manage"
-                  ? "text-orange-600 bg-orange-50"
+                  ? "text-green-600 bg-green-50"
                   : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
               }`}
             >
@@ -567,8 +567,8 @@ export default function FoxMilkTeaShop() {
                 >
                   <ArrowLeft className="w-4 h-4" />
                 </Button>
-                <h2 className="text-lg font-bold text-orange-600 flex items-center gap-2 flex-1 justify-center">
-                  <span>🦊</span>
+                <h2 className="text-lg font-bold text-green-600 flex items-center gap-2 flex-1 justify-center">
+                  <span>🌿</span>
                   Tùy chỉnh đồ uống
                 </h2>
                 <div className="w-8"></div> {/* Spacer for centering */}
@@ -580,7 +580,7 @@ export default function FoxMilkTeaShop() {
                 {/* Scrollable Content */}
                 <div className="flex-1 overflow-y-auto ">
                   <div className="p-4 space-y-4">
-                    <div className="text-center bg-orange-50 p-3 rounded-lg">
+                    <div className="text-center bg-green-50 p-3 rounded-lg">
                       <h3 className="font-semibold text-gray-800">{selectedMilkTea.name}</h3>
                       <p className="text-sm text-gray-600">Số lượng: {getQuantity(selectedMilkTea.id)}</p>
                     </div>
@@ -601,7 +601,7 @@ export default function FoxMilkTeaShop() {
                               className="flex-1 text-sm cursor-pointer flex justify-between"
                             >
                               <span>{topping.name}</span>
-                              <span className="text-orange-600 font-medium">+{formatPrice(topping.price)}</span>
+                              <span className="text-green-600 font-medium">+{formatPrice(topping.price)}</span>
                             </Label>
                           </div>
                         ))}
@@ -650,8 +650,8 @@ export default function FoxMilkTeaShop() {
                       <textarea
                         value={selectedNote}
                         onChange={(e) => setSelectedNote(e.target.value)}
-                        placeholder="Ví dụ: Ít đường hơn, nhiều đá, không topping..."
-                        className="w-full mt-2 p-3 border border-gray-300 rounded-lg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        placeholder="Ví dụ: Ít đường hơn, nhiều đá, không topping, thêm lá bạc hà..."
+                        className="w-full mt-2 p-3 border border-gray-300 rounded-lg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                         rows={3}
                         maxLength={200}
                       />
@@ -659,7 +659,7 @@ export default function FoxMilkTeaShop() {
                     </div>
                     {/* Voucher */}
                     <div>
-                      <Label className="text-sm font-semibold text-gray-700">Voucher</Label>
+                                              <Label className="text-sm font-semibold text-gray-700">Mã giảm giá</Label>
                       <TagInput initialTags={vouchers}
                         onTagsChange={handleTagsChange} />
                     </div>
@@ -670,7 +670,7 @@ export default function FoxMilkTeaShop() {
                 <div className="border-t border-gray-100 bg-white">
                   {/* Price Summary */}
                   <div className="p-4">
-                    <div className="bg-orange-50 p-4 rounded-lg">
+                    <div className="bg-green-50 p-4 rounded-lg">
                       <div className="flex justify-between text-sm mb-1">
                         <span>Giá gốc:</span>
                         <span>{formatPrice(selectedMilkTea.price * getQuantity(selectedMilkTea.id))}</span>
@@ -687,7 +687,7 @@ export default function FoxMilkTeaShop() {
                         </div>
                       )}
                       <Separator className="my-2" />
-                      <div className="flex justify-between font-semibold text-orange-600">
+                      <div className="flex justify-between font-semibold text-green-600">
                         <span>Tổng cộng:</span>
                         <span>
                           {formatPrice(
@@ -706,7 +706,7 @@ export default function FoxMilkTeaShop() {
 
                     <Button
                       onClick={confirmAddToCart}
-                      className="w-full mt-4 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 h-12 text-base font-semibold"
+                      className="w-full mt-4 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 h-12 text-base font-semibold"
                     >
                       Thêm vào giỏ hàng
                     </Button>
@@ -732,7 +732,7 @@ export default function FoxMilkTeaShop() {
                 <Button variant="ghost" size="sm" className="h-8 w-8 p-0 mr-3" onClick={() => setActiveSheet('none')}>
                   <ArrowLeft className="w-4 h-4" />
                 </Button>
-                <h2 className="text-lg font-bold text-orange-600 flex items-center gap-2 flex-1 justify-center">
+                <h2 className="text-lg font-bold text-green-600 flex items-center gap-2 flex-1 justify-center">
                   <ShoppingCart className="w-5 h-5" />
                   Giỏ hàng của bạn
                 </h2>
@@ -743,9 +743,9 @@ export default function FoxMilkTeaShop() {
             {cart.length === 0 ? (
               <div className="flex-1 flex items-center justify-center">
                 <div className="text-center">
-                  <div className="text-6xl mb-4">🦊</div>
+                  <div className="text-6xl mb-4">🌿</div>
                   <p className="text-gray-500 text-lg mb-2">Giỏ hàng trống</p>
-                  <p className="text-sm text-gray-400">Hãy chọn món yêu thích nhé!</p>
+                  <p className="text-sm text-gray-400">Hãy chọn món yêu thích từ Lá và Sương!</p>
                 </div>
               </div>
             ) : (
@@ -754,7 +754,7 @@ export default function FoxMilkTeaShop() {
                 <div className="flex-1 overflow-y-auto ">
                   <div className="p-4 space-y-4">
                     {cart.map((item) => (
-                      <Card key={item.id} className="border-orange-200">
+                      <Card key={item.id} className="border-green-200">
                         <CardContent className="p-4">
                           <div className="flex justify-between items-start mb-2">
                             <h4 className="font-semibold text-base">{item.milkTea.name}</h4>
@@ -772,10 +772,10 @@ export default function FoxMilkTeaShop() {
                             <p>Độ ngọt: {item.sweetness}</p>
                             <p>Lượng đá: {item.ice}</p>
                             {item.toppings.length > 0 && <p>Topping: {item.toppings.map((t) => t.name).join(", ")}</p>}
-                            {item.note && <p className="text-orange-600 font-medium">Ghi chú: {item.note}</p>}
+                            {item.note && <p className="text-green-600 font-medium">Ghi chú: {item.note}</p>}
                           </div>
                           <div className="flex justify-end">
-                            <span className="font-bold text-lg text-orange-600">{formatPrice(item.totalPrice)}</span>
+                            <span className="font-bold text-lg text-green-600">{formatPrice(item.totalPrice)}</span>
                           </div>
                         </CardContent>
                       </Card>
@@ -786,16 +786,16 @@ export default function FoxMilkTeaShop() {
                 {/* Fixed Bottom Section */}
                 <div className="border-t border-gray-100 bg-white">
                   <div className="p-4">
-                    <div className="bg-gradient-to-r from-orange-50 to-red-50 p-4 rounded-lg">
+                    <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-lg">
                       <div className="flex justify-between items-center mb-4">
                         <span className="font-bold text-xl">Tổng cộng:</span>
-                        <span className="font-bold text-2xl text-orange-600">{formatPrice(getTotalCartPrice)}</span>
+                        <span className="font-bold text-2xl text-green-600">{formatPrice(getTotalCartPrice)}</span>
                       </div>
                       <Button
-                        className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 h-12 text-base font-semibold"
+                        className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 h-12 text-base font-semibold"
                         onClick={handleStartCheckout}
                       >
-                        🦊 Đặt hàng ngay
+                        Đặt hàng ngay
                       </Button>
                     </div>
                   </div>
@@ -820,8 +820,8 @@ export default function FoxMilkTeaShop() {
                 <Button variant="ghost" size="sm" className="h-8 w-8 p-0 mr-3" onClick={() => {setActiveSheet('none'); setCashAmount(0)}}>
                   <ArrowLeft className="w-4 h-4" />
                 </Button>
-                <h2 className="text-lg font-bold text-orange-600 flex items-center gap-2 flex-1 justify-center">
-                  <span>🦊</span>
+                <h2 className="text-lg font-bold text-green-600 flex items-center gap-2 flex-1 justify-center">
+                  {/* <span>🦊</span> */}
                   {checkoutStep === 1
                     ? "Chọn thanh toán"
                     : paymentMethod === "cash"
@@ -838,13 +838,13 @@ export default function FoxMilkTeaShop() {
                 {checkoutStep === 1 && (
                   <div className="space-y-4">
                     {/* Order Summary */}
-                    <div className="bg-orange-50 p-4 rounded-lg">
+                    <div className="bg-green-50 p-4 rounded-lg">
                       <h3 className="font-semibold mb-2">Tóm tắt đơn hàng</h3>
                       <div className="space-y-1 text-sm">
                         {cart.map((item) => (
                           <div
                             key={item.id}
-                            className="border-b border-orange-100 pb-2 mb-2 last:border-b-0 last:pb-0 last:mb-0"
+                            className="border-b border-green-100 pb-2 mb-2 last:border-b-0 last:pb-0 last:mb-0"
                           >
                             <div className="flex justify-between">
                               <span>
@@ -852,12 +852,12 @@ export default function FoxMilkTeaShop() {
                               </span>
                               <span>{formatPrice(item.totalPrice)}</span>
                             </div>
-                            {item.note && <div className="text-xs text-orange-600 mt-1">Ghi chú: {item.note}</div>}
+                            {item.note && <div className="text-xs text-green-600 mt-1">Ghi chú: {item.note}</div>}
                           </div>
                         ))}
                       </div>
                       <Separator className="my-2" />
-                      <div className="flex justify-between font-bold text-orange-600">
+                      <div className="flex justify-between font-bold text-green-600">
                         <span>Tổng cộng:</span>
                         <span>{formatPrice(getTotalCartPrice)}</span>
                       </div>
@@ -934,7 +934,7 @@ export default function FoxMilkTeaShop() {
                       <h3 className="text-lg font-bold text-gray-800 mb-2">Quét mã QR để thanh toán</h3>
                       <p className="text-sm text-gray-600">
                         Số tiền cần chuyển:{" "}
-                        <span className="font-bold text-orange-600">{formatPrice(getTotalCartPrice)}</span>
+                        <span className="font-bold text-green-600">{formatPrice(getTotalCartPrice)}</span>
                       </p>
                     </div>
 
@@ -959,14 +959,14 @@ export default function FoxMilkTeaShop() {
                           <span className="font-medium">Số tài khoản:</span> 1234567890
                         </p>
                         <p>
-                          <span className="font-medium">Chủ tài khoản:</span> Fox Milk Tea
+                          <span className="font-medium">Chủ tài khoản:</span> Lá và Sương
                         </p>
                         <p>
                           <span className="font-medium">Số tiền:</span>{" "}
-                          <span className="font-bold text-orange-600">{formatPrice(getTotalCartPrice)}</span>
+                          <span className="font-bold text-green-600">{formatPrice(getTotalCartPrice)}</span>
                         </p>
                         {/* <p>
-                          <span className="font-medium">Nội dung:</span> Fox Order #{Date.now().toString().slice(-6)}
+                          <span className="font-medium">Nội dung:</span> Lá và Sương Order #{Date.now().toString().slice(-6)}
                         </p> */}
                       </div>
                     </div>
@@ -987,7 +987,7 @@ export default function FoxMilkTeaShop() {
                   <Button
                     onClick={handlePaymentMethodNext}
                     disabled={!paymentMethod}
-                    className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 h-12 text-base font-semibold disabled:opacity-50"
+                    className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 h-12 text-base font-semibold disabled:opacity-50"
                   >
                     Tiếp theo
                   </Button>
