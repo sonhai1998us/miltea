@@ -69,25 +69,25 @@ interface Voucher {
 }
 
 const sweetnessLevels = [
-  { value: "50", label: "Ít ngọt" },
-  { value: "70", label: "Ngọt vừa" },
-  { value: "100", label: "Bình thường" },
+  { value: "50", label: "50%" },
+  { value: "70", label: "70%" },
+  { value: "100", label: "100%" },
 ]
 
 const iceLevels = [
   { value: "no-ice", label: "Không đá" },
-  { value: "less-ice", label: "Ít đá" },
-  { value: "normal-ice", label: "Đá bình thường" },
+  { value: "less-ice", label: "Có đá" },
+  { value: "normal-ice", label: "Đá riêng" },
 ]
 
 export default function FoxMilkTeaShop() {
   const [activeTab, setActiveTab] = useState<"order" | "manage">("order")
   const [quantities, setQuantities] = useState<{ [key: number]: number }>({})
   const [selectedMilkTea, setSelectedMilkTea] = useState<MilkTea | null>(null)
-  const [selectedToppings, setSelectedToppings] = useState<Topping[]>([])
-  const [selectedSweetness, setSelectedSweetness] = useState("50")
-  const [selectedIce, setSelectedIce] = useState("normal-ice")
-  const [selectedNote, setSelectedNote] = useState("")
+  const [selectedToppings, setSelectedToppings] = useState<{ [key: number]: Topping[] }>({})
+  const [selectedSweetness, setSelectedSweetness] = useState<{ [key: number]: string }>({})
+  const [selectedIce, setSelectedIce] = useState<{ [key: number]: string }>({})
+  const [selectedNote, setSelectedNote] = useState<{ [key: number]: string }>({})
   const [cart, setCart] = useState<CartItem[]>([])
   const [orders, setOrders] = useState<Order[]>([])
   const [activeSheet, setActiveSheet] = useState<'none' | 'customization' | 'cart' | 'checkout'>('none')
@@ -194,10 +194,19 @@ export default function FoxMilkTeaShop() {
 
   const handleAddToCart = useCallback((milkTea: MilkTea) => {
     setSelectedMilkTea(milkTea)
-    setSelectedToppings([])
-    setSelectedSweetness("50")
-    setSelectedIce("normal-ice")
-    setSelectedNote("")
+    // Initialize default values for this milk tea if not already set
+    setSelectedSweetness(prev => ({
+      ...prev,
+      [milkTea.id]: prev[milkTea.id] || "50"
+    }))
+    setSelectedIce(prev => ({
+      ...prev,
+      [milkTea.id]: prev[milkTea.id] || "normal-ice"
+    }))
+    setSelectedNote(prev => ({
+      ...prev,
+      [milkTea.id]: prev[milkTea.id] || ""
+    }))
     setActiveSheet('customization')
   }, [])
 
@@ -215,7 +224,8 @@ export default function FoxMilkTeaShop() {
   const confirmAddToCart = async () => {
     if (!selectedMilkTea) return
     const quantity = getQuantity(selectedMilkTea.id)
-    const toppingsPrice = selectedToppings.reduce((sum, topping) => sum + topping.price, 0)
+    const currentToppings = selectedToppings[selectedMilkTea.id] || []
+    const toppingsPrice = currentToppings.reduce((sum, topping) => sum + topping.price, 0)
     let totalPrice = (selectedMilkTea.price + toppingsPrice) * quantity
     if(selectedVouchers){
       totalPrice = calcPrice(totalPrice, selectedVouchers.value, selectedVouchers.type)
@@ -225,12 +235,12 @@ export default function FoxMilkTeaShop() {
         connect: [{ documentId: selectedMilkTea.documentId }],
       },
       toppings: {
-        connect: selectedToppings.map((t) => ({ documentId: t.documentId })),
+        connect: currentToppings.map((t) => ({ documentId: t.documentId })),
       },
       quantity,
-      sweetness: sweetnessLevels.find((s) => s.value === selectedSweetness)?.label || "",
-      ice: iceLevels.find((i) => i.value === selectedIce)?.label || "",
-      note: selectedNote,
+      sweetness: sweetnessLevels.find((s) => s.value === selectedSweetness[selectedMilkTea.id])?.label || "",
+      ice: iceLevels.find((i) => i.value === selectedIce[selectedMilkTea.id])?.label || "",
+      note: selectedNote[selectedMilkTea.id] || "",
       totalPrice,
     };
 
@@ -265,11 +275,23 @@ export default function FoxMilkTeaShop() {
   }
 
   const toggleTopping = useCallback((topping: Topping) => {
+    if (!selectedMilkTea) return
     setSelectedToppings((prev) => {
-      const exists = prev.find((t) => t.id === topping.id)
-      return exists ? prev.filter((t) => t.id !== topping.id) : [...prev, topping]
+      const currentToppings = prev[selectedMilkTea.id] || []
+      const toppingExists = currentToppings.find((t) => t.id === topping.id)
+      if (toppingExists) {
+        return {
+          ...prev,
+          [selectedMilkTea.id]: currentToppings.filter((t) => t.id !== topping.id)
+        }
+      } else {
+        return {
+          ...prev,
+          [selectedMilkTea.id]: [...currentToppings, topping]
+        }
+      }
     })
-  }, [])
+  }, [selectedMilkTea])
 
   const getTotalCartPrice = useMemo(() => cart.reduce((sum, item) => sum + item.totalPrice, 0), [cart])
 
@@ -593,7 +615,7 @@ export default function FoxMilkTeaShop() {
                           <div key={topping.id} className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-50">
                             <Checkbox
                               id={`topping-${topping.id}`}
-                              checked={selectedToppings.some((t) => t.id === topping.id)}
+                              checked={(selectedToppings[selectedMilkTea?.id || 0] || []).some((t) => t.id === topping.id)}
                               onCheckedChange={() => toggleTopping(topping)}
                             />
                             <Label
@@ -612,17 +634,21 @@ export default function FoxMilkTeaShop() {
 
                     {/* Sweetness */}
                     <div>
-                      <Label className="text-sm font-semibold text-gray-700">Độ ngọt</Label>
-                      <RadioGroup value={selectedSweetness} onValueChange={setSelectedSweetness} className="mt-2">
-                        {sweetnessLevels.map((level) => (
-                          <div key={level.value} className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-50">
-                            <RadioGroupItem value={level.value} id={`sweet-${level.value}`} />
-                            <Label htmlFor={`sweet-${level.value}`} className="text-sm cursor-pointer">
-                              {level.label}
-                            </Label>
-                          </div>
-                        ))}
-                      </RadioGroup>
+                                              <Label className="text-sm font-semibold text-gray-700">Độ ngọt</Label>
+                        <RadioGroup 
+                          value={selectedSweetness[selectedMilkTea?.id || 0] || "50"} 
+                          onValueChange={(value) => setSelectedSweetness({...selectedSweetness, [selectedMilkTea?.id || 0]: value})} 
+                          className="mt-2"
+                        >
+                          {sweetnessLevels.map((level) => (
+                            <div key={level.value} className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-50">
+                              <RadioGroupItem value={level.value} id={`sweet-${level.value}`} />
+                              <Label htmlFor={`sweet-${level.value}`} className="text-sm cursor-pointer">
+                                {level.label}
+                              </Label>
+                            </div>
+                          ))}
+                        </RadioGroup>
                     </div>
 
                     <Separator />
@@ -630,7 +656,11 @@ export default function FoxMilkTeaShop() {
                     {/* Ice */}
                     <div>
                       <Label className="text-sm font-semibold text-gray-700">Lượng đá</Label>
-                      <RadioGroup value={selectedIce} onValueChange={setSelectedIce} className="mt-2">
+                      <RadioGroup 
+                        value={selectedIce[selectedMilkTea?.id || 0] || "normal-ice"} 
+                        onValueChange={(value) => setSelectedIce({...selectedIce, [selectedMilkTea?.id || 0]: value})} 
+                        className="mt-2"
+                      >
                         {iceLevels.map((level) => (
                           <div key={level.value} className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-50">
                             <RadioGroupItem value={level.value} id={`ice-${level.value}`} />
@@ -646,16 +676,16 @@ export default function FoxMilkTeaShop() {
 
                     {/* Note */}
                     <div>
-                      <Label className="text-sm font-semibold text-gray-700">Ghi chú cho ly trà sữa</Label>
-                      <textarea
-                        value={selectedNote}
-                        onChange={(e) => setSelectedNote(e.target.value)}
-                        placeholder="Ví dụ: Ít đường hơn, nhiều đá, không topping, thêm lá bạc hà..."
-                        className="w-full mt-2 p-3 border border-gray-300 rounded-lg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                        rows={3}
-                        maxLength={200}
-                      />
-                      <div className="text-xs text-gray-400 mt-1 text-right">{selectedNote.length}/200 ký tự</div>
+                                              <Label className="text-sm font-semibold text-gray-700">Ghi chú cho ly trà sữa</Label>
+                        <textarea
+                          value={selectedNote[selectedMilkTea?.id || 0] || ""}
+                          onChange={(e) => setSelectedNote({...selectedNote, [selectedMilkTea?.id || 0]: e.target.value})}
+                          placeholder="Ví dụ: Ít đường hơn, nhiều đá, không topping, thêm lá bạc hà..."
+                          className="w-full mt-2 p-3 border border-gray-300 rounded-lg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                          rows={3}
+                          maxLength={200}
+                        />
+                        <div className="text-xs text-gray-400 mt-1 text-right">{(selectedNote[selectedMilkTea?.id || 0] || "").length}/200 ký tự</div>
                     </div>
                     {/* Voucher */}
                     <div>
@@ -671,37 +701,37 @@ export default function FoxMilkTeaShop() {
                   {/* Price Summary */}
                   <div className="p-4">
                     <div className="bg-green-50 p-4 rounded-lg">
-                      <div className="flex justify-between text-sm mb-1">
-                        <span>Giá gốc:</span>
-                        <span>{formatPrice(selectedMilkTea.price * getQuantity(selectedMilkTea.id))}</span>
-                      </div>
-                      {selectedToppings.length > 0 && (
-                        <div className="flex justify-between text-sm mb-1">
-                          <span>Topping:</span>
+                                              <div className="flex justify-between text-sm mb-1">
+                          <span>Giá gốc:</span>
+                          <span>{formatPrice(selectedMilkTea.price * getQuantity(selectedMilkTea.id))}</span>
+                        </div>
+                        {(selectedToppings[selectedMilkTea?.id || 0] || []).length > 0 && (
+                          <div className="flex justify-between text-sm mb-1">
+                            <span>Topping:</span>
+                            <span>
+                              +
+                              {formatPrice(
+                                (selectedToppings[selectedMilkTea?.id || 0] || []).reduce((sum, t) => sum + t.price, 0) * getQuantity(selectedMilkTea.id),
+                              )}
+                            </span>
+                          </div>
+                        )}
+                        <Separator className="my-2" />
+                        <div className="flex justify-between font-semibold text-green-600">
+                          <span>Tổng cộng:</span>
                           <span>
-                            +
                             {formatPrice(
-                              selectedToppings.reduce((sum, t) => sum + t.price, 0) * getQuantity(selectedMilkTea.id),
+                                selectedVouchers 
+                                ? 
+                                  calcPrice((selectedMilkTea.price + (selectedToppings[selectedMilkTea?.id || 0] || []).reduce((sum, t) => sum + t.price, 0)) *
+                                  getQuantity(selectedMilkTea.id), selectedVouchers.value, selectedVouchers.type) 
+                                :
+                                  (selectedMilkTea.price + (selectedToppings[selectedMilkTea?.id || 0] || []).reduce((sum, t) => sum + t.price, 0)) *
+                                  getQuantity(selectedMilkTea.id)
+                              ,
                             )}
                           </span>
                         </div>
-                      )}
-                      <Separator className="my-2" />
-                      <div className="flex justify-between font-semibold text-green-600">
-                        <span>Tổng cộng:</span>
-                        <span>
-                          {formatPrice(
-                              selectedVouchers 
-                              ? 
-                                calcPrice((selectedMilkTea.price + selectedToppings.reduce((sum, t) => sum + t.price, 0)) *
-                                getQuantity(selectedMilkTea.id), selectedVouchers.value, selectedVouchers.type) 
-                              :
-                                (selectedMilkTea.price + selectedToppings.reduce((sum, t) => sum + t.price, 0)) *
-                                getQuantity(selectedMilkTea.id)
-                            ,
-                          )}
-                        </span>
-                      </div>
                     </div>
 
                     <Button
