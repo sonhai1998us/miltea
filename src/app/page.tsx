@@ -201,7 +201,7 @@ export default function FoxMilkTeaShop() {
     }))
     setSelectedIce(prev => ({
       ...prev,
-      [milkTea.id]: prev[milkTea.id] || "normal-ice"
+      [milkTea.id]: prev[milkTea.id] || "less-ice"
     }))
     setSelectedNote(prev => ({
       ...prev,
@@ -265,6 +265,10 @@ export default function FoxMilkTeaShop() {
 
       setActiveSheet('none')
       setSelectedMilkTea(null)
+      setSelectedToppings({})
+      setSelectedSweetness({})
+      setSelectedIce({})
+      setSelectedNote({})
     }
     ).catch(err => console.log(err));
 
@@ -657,7 +661,7 @@ export default function FoxMilkTeaShop() {
                     <div>
                       <Label className="text-sm font-semibold text-gray-700">Lượng đá</Label>
                       <RadioGroup 
-                        value={selectedIce[selectedMilkTea?.id || 0] || "normal-ice"} 
+                        value={selectedIce[selectedMilkTea?.id || 0] || "less-ice"} 
                         onValueChange={(value) => setSelectedIce({...selectedIce, [selectedMilkTea?.id || 0]: value})} 
                         className="mt-2"
                       >
