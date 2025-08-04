@@ -221,7 +221,7 @@ export default function FoxMilkTeaShop() {
     return price;
   }
 
-  const confirmAddToCart = async () => {
+  const confirmAddToCart = async (id: number) => {
     if (!selectedMilkTea) return
     const quantity = getQuantity(selectedMilkTea.id)
     const currentToppings = selectedToppings[selectedMilkTea.id] || []
@@ -265,10 +265,10 @@ export default function FoxMilkTeaShop() {
 
       setActiveSheet('none')
       setSelectedMilkTea(null)
-      setSelectedToppings({})
-      setSelectedSweetness({})
-      setSelectedIce({})
-      setSelectedNote({})
+      setSelectedToppings({...selectedToppings, [id]: []})
+      setSelectedSweetness({...selectedSweetness, [id]: "50"})
+      setSelectedIce({...selectedIce, [id]: "less-ice"})
+      setSelectedNote({...selectedNote, [id]: ""})
     }
     ).catch(err => console.log(err));
 
@@ -739,7 +739,7 @@ export default function FoxMilkTeaShop() {
                     </div>
 
                     <Button
-                      onClick={confirmAddToCart}
+                      onClick={() => confirmAddToCart(selectedMilkTea.id)}
                       className="w-full mt-4 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 h-12 text-base font-semibold"
                     >
                       Thêm vào giỏ hàng
