@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 type Tag = {
   name: string;
@@ -16,35 +16,38 @@ export const TagInput: React.FC<TagInputProps> = ({ initialTags, onTagsChange })
   const [input, setInput] = useState("");
   const [error, setError] = useState("");
 
-  // Gọi callback mỗi khi tags thay đổi
+  // Giữ callback mới nhất, tránh phải thêm vào deps của effect phía dưới
+  const onChangeRef = useRef(onTagsChange);;
   useEffect(() => {
-    onTagsChange?.(tags);
+    onChangeRef.current = onTagsChange;
+  }, [onTagsChange]);
+
+  // Gọi callback mỗi khi tags thay đổi (không phụ thuộc vào onTagsChange nữa)
+  useEffect(() => {
+    onChangeRef.current?.(tags);
   }, [tags]);
 
   const addTag = () => {
-    if (!input.trim()) return;
-    const foundTag = initialTags.find(tag => tag.name === input);
-    
-    if(foundTag && tags.find(tag => tag.name === foundTag.name)){
-      setError("Mã giảm giá đã được sử dụng!")
-      return
+    const code = input.trim();
+    if (!code) return;
+
+    const foundTag = initialTags.find(tag => tag.name === code);
+
+    if (foundTag && tags.some(tag => tag.name === foundTag.name)) {
+      setError("Mã giảm giá đã được sử dụng!");
+      return;
     }
-    if(foundTag){
-      setTags([...tags, { ...foundTag}]);
-      setError("")
+    if (foundTag) {
+      setTags(prev => [...prev, { ...foundTag }]);
+      setError("");
+    } else {
+      setError("Mã giảm giá không tồn tại!");
     }
-    if(!foundTag){
-      setError("Mã giảm giá không tồn tại!")
-    }
-    // const [name] = input.split(":");
-    // if (name) {
-      // setTags([...tags, { name: input}]);
-      setInput("");
-    // }
+    setInput("");
   };
 
   const removeTag = (index: number) => {
-    setTags(tags.filter((_, i) => i !== index));
+    setTags(prev => prev.filter((_, i) => i !== index));
   };
 
   return (
@@ -56,10 +59,7 @@ export const TagInput: React.FC<TagInputProps> = ({ initialTags, onTagsChange })
             className="flex items-center px-2 py-1 bg-green-600 text-white rounded-full text-sm"
           >
             {tag.name}
-            <button
-              onClick={() => removeTag(index)}
-              className="ml-2 text-white"
-            >
+            <button onClick={() => removeTag(index)} className="ml-2 text-white">
               ×
             </button>
           </span>
@@ -71,7 +71,7 @@ export const TagInput: React.FC<TagInputProps> = ({ initialTags, onTagsChange })
           placeholder="Nhập mã giảm giá"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          disabled={tags.length > 0 ? true : false }
+          disabled={tags.length > 0}
           onKeyDown={(e) => e.key === "Enter" && addTag()}
           className="flex-grow px-3 py-2 border border-green-200 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 disabled:text-gray-400"
         />
@@ -82,9 +82,7 @@ export const TagInput: React.FC<TagInputProps> = ({ initialTags, onTagsChange })
           Add
         </button>
       </div>
-      <div className="mt-2 text-red-500">
-        {error}
-      </div>
+      <div className="mt-2 text-red-500">{error}</div>
     </div>
   );
 };

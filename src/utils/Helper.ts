@@ -6,6 +6,8 @@ import { Buffer } from 'buffer';
 import axios, { AxiosResponse } from 'axios';
 
 interface ApiResponse<T> {
+  status?: string;
+  total?: number;
   data?: T;
   error?: Error;
 }
@@ -36,8 +38,8 @@ export const fetchApi = async <T>(url: string, token: string = ''): Promise<ApiR
   }
   
   try {
-    const response: AxiosResponse<T> = await axios.get(_url, _options).then(resp=>resp?.data??resp).catch(e=>e);
-    return response;
+    const response: AxiosResponse<ApiResponse<T>> = await axios.get(_url, _options);
+    return response.data;
   } catch (error) {
     return { error: error as Error };
   }
@@ -58,8 +60,8 @@ export const postApi = async <T>(url: string, params: object, token: string = ''
   }
   
   try {
-    const response: AxiosResponse<T> = await axios.post(_url, params, _options).then(resp=>resp?.data??resp).catch(e=>e);
-    return response;
+    const response: AxiosResponse<ApiResponse<T>> = await axios.post(_url, params, _options);
+    return response.data;
   } catch (error) {
     return { error: error as Error };
   }
@@ -123,8 +125,8 @@ export const putApi = async <T>(url: string, params: object, token: string = '',
   }
   
   try {
-    const response: AxiosResponse<T> = await axios.put(_url, params, _options);
-    return { data: response.data };
+    const response: AxiosResponse<ApiResponse<T>> = await axios.put(_url, params, _options);
+    return response.data;
   } catch (error) {
     return { error: error as Error };
   }
@@ -149,8 +151,8 @@ export const deleteApi = async <T>(url: string, token: string = '', params: stri
   }
   
   try {
-    const response: AxiosResponse<T> = await axios.delete(_url, _options);
-    return { data: response.data };
+    const response: AxiosResponse<ApiResponse<T>> = await axios.delete(_url, _options);
+    return response.data;
   } catch (error) {
     return { error: error as Error };
   }
@@ -178,8 +180,8 @@ export const putMultipleApi = async <T>(
   _options.data = params;
 
   try {
-    const response: AxiosResponse<T> = await axios.put(_url, params);
-    return { data: response.data };
+    const response: AxiosResponse<ApiResponse<T>> = await axios.put(_url, params);
+    return response.data;
   } catch (error) {
     return { error: error as Error };
   }

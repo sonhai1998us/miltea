@@ -4,16 +4,7 @@ import { Plus, Minus, Star } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-
-interface MilkTea {
-  documentId: string
-  id: number
-  name: string
-  price: number
-  description: string
-  image: { url: string }
-  rating: number
-}
+import type { MilkTea } from "@/types/shop"
 
 interface MilkTeaListProps {
   milkTeas: MilkTea[]
@@ -90,7 +81,11 @@ export default function MilkTeaList({
               <div className="flex items-center">
                 <div className="w-24 h-24 flex items-center justify-center pl-3">
                   <img
-                    src={milkTea.image.url || "/images/logo/logo2.png"}
+                    src={
+                      milkTea.image
+                        ? `${process.env.CDN_URL_S3 ?? ""}${milkTea.image}`
+                        : "/images/logo/logo2.png"
+                    }
                     alt={milkTea.name}
                     className="w-20 h-20 object-cover rounded-lg"
                   />
@@ -100,12 +95,12 @@ export default function MilkTeaList({
                     <h3 className="font-semibold text-gray-800 text-sm leading-tight">{milkTea.name}</h3>
                     <div className="flex items-center gap-1 ml-2">
                       <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                      <span className="text-xs text-gray-600">{milkTea.rating}</span>
+                      <span className="text-xs text-gray-600">{5}</span>
                     </div>
                   </div>
                   <p className="text-xs text-gray-600 mb-2 line-clamp-2">{milkTea.description}</p>
                   <div className="flex items-center justify-between gap-2">
-                    <span className="font-bold text-green-600">{formatPrice(milkTea.price)}</span>
+                    <span className="font-bold text-green-600">{formatPrice(milkTea.base_price)}</span>
                     <div className="flex items-center gap-2">
                       <div className="flex items-center border border-green-300 rounded-lg">
                         <Button
