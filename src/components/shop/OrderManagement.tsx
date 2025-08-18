@@ -57,7 +57,7 @@ function OrderManagementBase({ orders, formatPrice, formatDateTime, onToggleStat
                 <div key={item.id} className="text-sm">
                   <div className="flex justify-between">
                     <span className="font-medium">{item.product_name} x{item.quantity}</span>
-                    <span className="text-green-600">{formatPrice((item.unit_price + item.size_price + (item.toppings.reduce((s, t) => s + t.price, 0)) ) * item.quantity)}</span>
+                    <span className="text-green-600">{formatPrice((item.unit_price + (item.toppings.reduce((s, t) => s + t.price, 0)) ) * item.quantity)}</span>
                   </div>
                   <div className="text-xs text-gray-500 ml-2">
                     <div>•{item.sweetness_name}</div> 

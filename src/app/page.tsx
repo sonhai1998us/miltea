@@ -201,12 +201,14 @@ export default function FoxMilkTeaShop() {
                 await postApi(`${process.env.API_URL}${process.env.PREFIX_API}order_items`, order_item_data)
               })
           })
-          .then(async() => {
+          .then(() => {
             cart.map(async(item) =>{
               await deleteApi(`${process.env.API_URL}${process.env.PREFIX_API}cart_items/${item.id}`)
             })
-            const ordersRes = await fetchApi(`${process.env.API_URL}${process.env.PREFIX_API}orders?fqnull=deleted_at`)
-            setOrders(ordersRes?.status === 'success' && ordersRes?.data ? (ordersRes.data as Order[]) : [])
+            setTimeout(async() => {
+              const ordersRes = await fetchApi(`${process.env.API_URL}${process.env.PREFIX_API}orders?fqnull=deleted_at`)
+              setOrders(ordersRes?.status === 'success' && ordersRes?.data ? (ordersRes.data as Order[]) : [])
+            },200)
               setCart([]); setActiveSheet('none'); setCheckoutStep(1); setPaymentMethod(""); setCashAmount(0); setCashError("")
               setDiscountAmount(0); setDiscountLocked(false)
           })
