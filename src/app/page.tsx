@@ -116,7 +116,10 @@ export default function FoxMilkTeaShop() {
               })
             }
           }
-        }
+        const refreshedCart = await fetchApi(`${process.env.API_URL}${process.env.PREFIX_API}cart_items?fqnull=deleted_at`)
+        if (refreshedCart?.status === 'success' && refreshedCart?.data) {
+          setCart(refreshedCart.data as CartItem[])
+        }}
 
       }
       setActiveSheet('none')

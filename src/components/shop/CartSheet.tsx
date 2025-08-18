@@ -59,7 +59,7 @@ function CartSheetBase({ open, cart, formatPrice, total, onClose, onRemove, onCh
               <div className="p-4 space-y-4">
                 {cart.map((item) => {
                   const toppingsPrice = item.toppings ? item.toppings.reduce((sum, topping) => sum + topping.price, 0) * item.quantity : 0
-                  const itemTotal = (item.product_price * item.quantity) + toppingsPrice + (item.size_price *item.quantity)
+                  const itemTotal = (item.product_price * item.quantity) + toppingsPrice + (item?.size_price ?? 0 *item.quantity)
                   
                   return (
                     <Card key={item.id} className="border-green-200">
