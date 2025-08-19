@@ -100,7 +100,7 @@ export default function MilkTeaList({
       
       {filteredMilkTeas.length === 0 && searchQuery && (
         <div className="text-center py-8">
-          <p className="text-gray-500 text-sm">Không tìm thấy trà sữa nào phù hợp với "{searchQuery}"</p>
+          <p className="text-gray-500 text-sm">Không tìm thấy trà sữa nào phù hợp với {'"' + searchQuery + '"'}</p>
         </div>
       )}
 
