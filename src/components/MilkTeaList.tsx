@@ -4,6 +4,8 @@ import { Plus, Minus, Star } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
+import SearchBar from "./SearchBar"
+import { useState, useMemo } from "react"
 import type { MilkTea } from "@/types/shop"
 
 interface MilkTeaListProps {
@@ -23,9 +25,32 @@ export default function MilkTeaList({
   handleAddToCart,
   formatPrice
 }: MilkTeaListProps) {
+  const [searchQuery, setSearchQuery] = useState("")
+
+  // Filter milk teas based on search query
+  const filteredMilkTeas = useMemo(() => {
+    if (!searchQuery.trim()) {
+      return milkTeas
+    }
+
+    const query = searchQuery.toLowerCase().trim()
+    return milkTeas.filter((milkTea) => {
+      const name = milkTea.name?.toLowerCase() || ""
+      const description = milkTea.description?.toLowerCase() || ""
+      
+      // Tìm kiếm theo từng ký tự - kiểm tra xem query có là substring của name hoặc description không
+      return name.includes(query) || description.includes(query)
+    })
+  }, [milkTeas, searchQuery])
+
+  const handleSearch = (query: string) => {
+    setSearchQuery(query)
+  }
+
   if (isLoading) {
     return (
       <div className="p-4 max-w-md mx-auto pb-24">
+        <SearchBar onSearch={handleSearch} />
         <div className="grid gap-4">
           {/* Loading skeleton for milk teas */}
           {Array.from({ length: 6 }).map((_, index) => (
@@ -71,8 +96,16 @@ export default function MilkTeaList({
 
   return (
     <div className="p-4 max-w-md mx-auto pb-24">
+      <SearchBar onSearch={handleSearch} />
+      
+      {filteredMilkTeas.length === 0 && searchQuery && (
+        <div className="text-center py-8">
+          <p className="text-gray-500 text-sm">Không tìm thấy trà sữa nào phù hợp với "{searchQuery}"</p>
+        </div>
+      )}
+
       <div className="grid gap-4">
-        {milkTeas.map((milkTea) => (
+        {filteredMilkTeas.map((milkTea) => (
           <Card
             key={milkTea.id}
             className="overflow-hidden border-green-200 shadow-md hover:shadow-lg transition-shadow"
