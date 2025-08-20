@@ -22,6 +22,7 @@ interface Props {
   onConfirm: () => void
   onPaymentChange: (v: "cash" | "transfer") => void
   onCashChange: (v: number) => void
+  onPrintBill: () => void
   formatInputNumber: (s: string) => string
 }
 
@@ -38,6 +39,7 @@ function CheckoutSheetBase({
   onConfirm,
   onPaymentChange,
   onCashChange,
+  onPrintBill,
   formatInputNumber,
 }: Props) {
   if (!open) return null
@@ -173,10 +175,16 @@ function CheckoutSheetBase({
 
         {step === 2 && (
           <div className="border-t border-gray-100 bg-white">
-            <div className="p-4">
+            <div className="p-4 flex gap-4 w-full">
+              {/* <Button
+                onClick={onPrintBill}
+                className={`w-full h-12 flex-1 text-base font-semibold ${paymentMethod === "cash" ? "bg-green-600 hover:from-green-600 hover:to-green-700" : "bg-green-600 hover:from-blue-600 hover:to-blue-700"}`}
+              >
+                In hóa đơn
+              </Button> */}
               <Button
                 onClick={onConfirm}
-                className={`w-full h-12 text-base font-semibold ${paymentMethod === "cash" ? "bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700" : "bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"}`}
+                className={`w-full h-12 flex-1 text-base font-semibold ${paymentMethod === "cash" ? "bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700" : "bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"}`}
               >
                 Xác nhận hoàn tất
               </Button>

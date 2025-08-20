@@ -117,7 +117,6 @@ function CustomizationSheetBase({
             <div className="w-8"></div>
           </div>
         </div>
-
         {milkTea && (
           <>
             <div className="flex-1 overflow-y-auto">
