@@ -1,0 +1,41 @@
+version: "3.9"
+
+services:
+  # ---------- DEV (hot reload) ----------
+  web-dev:
+    build:
+      context: .
+      target: dev               # dùng stage `dev` trong Dockerfile
+    container_name: next_app_dev
+    ports:
+      - "3000:3000"             # http://localhost:3000
+    environment:
+      WATCHPACK_POLLING: "true" # đảm bảo HMR ổn định trong Docker (Windows/Mac)
+      NEXT_TELEMETRY_DISABLED: "1"
+      # (tuỳ chọn) thêm biến môi trường dev
+      # NEXT_PUBLIC_API_URL: "http://localhost:3000/api"
+    volumes:
+      # Mount toàn bộ source code để hot reload
+      - ./:/app
+      # Giữ node_modules trong container để tránh bị đè bởi mount ở trên
+      - /app/node_modules
+      # (tuỳ chọn) nếu bạn có .env.local, bind vào cho tiện
+      # - ./.env.local:/app/.env.local
+    # Nếu bạn muốn gỡ lỗi crash, bật tty:
+    tty: true
+
+  # ---------- PROD (standalone) ----------
+  web:
+    build:
+      context: .
+      target: runner            # dùng stage `runner` (image prod gọn)
+    container_name: next_app
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_TELEMETRY_DISABLED: "1"
+      NODE_ENV: "production"
+      # Truyền runtime env cần thiết (server-side):
+      # API_URL: "https://api.example.com"
+      # Lưu ý: biến client phải prefix NEXT_PUBLIC_, phần lớn sẽ inlined lúc build.
+    restart: unless-stopped

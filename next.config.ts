@@ -37,6 +37,7 @@ const nextConfig: NextConfig = {
     return config;
   },
   env: {...enviroment},
+  output: "standalone",
   images: {
     remotePatterns: [{
       protocol: 'https',
