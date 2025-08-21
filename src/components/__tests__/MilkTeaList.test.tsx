@@ -27,7 +27,7 @@ describe("MilkTeaList search integration", () => {
       makeMilkTea(2, "Hồng trà", "vị thơm đậm")
     ]
 
-    const getQty = (id: number) => 1
+    const getQty = () => 1
     const setQty = jest.fn()
     const addToCart = jest.fn()
     const formatPrice = (n: number) => `${n}`

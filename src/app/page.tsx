@@ -43,6 +43,7 @@ export default function FoxMilkTeaShop() {
         onQuantityChange={(id: number, newQuantity: number) => {
           state.setQuantities(updateQuantity(state.quantities, id, newQuantity))
         }}
+        onPrintBill={actions.printOrderBill}
       />
 
       <BottomNav
@@ -83,7 +84,6 @@ export default function FoxMilkTeaShop() {
         onStartCheckout={actions.handleStartCheckout}
         onPaymentMethodNext={actions.handlePaymentMethodNext}
         onCompleteOrder={actions.handleCompleteOrder}
-        onPrintCart={actions.handlePrintCart}
         onPaymentChange={state.setPaymentMethod}
         onCashChange={state.setCashAmount}
         onChangeDiscount={(n: number) => state.setDiscountAmount(n)}

@@ -211,10 +211,6 @@ export const useShopActions = (
     setActiveSheet,
     resetCheckoutState
   ])
-  const handlePrintCart = () => {
-    console.log(cart);
-    ShopService.printBill(cart)
-  }
   // Toggle order status
   const toggleOrderStatus = useCallback(async (order: Order) => {
     // Optimistic update
@@ -245,7 +241,9 @@ export const useShopActions = (
     handleStartCheckout,
     handlePaymentMethodNext,
     handleCompleteOrder,
-    handlePrintCart,
+    printOrderBill: useCallback((order: Order) => {
+      ShopService.printBill(order)
+    }, []),
     toggleOrderStatus,
   }
 }

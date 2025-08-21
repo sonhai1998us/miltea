@@ -157,12 +157,12 @@ export class ShopService {
       return false
     }
   }
-  static async printBill(cart: CartItem[]): Promise<boolean>{ 
+  static async printBill(order: Order): Promise<boolean>{ 
     try {
-      await postApi(this.getApiUrl('print-bill'), cart)
+      await postApi(this.getApiUrl('print-bill'), order)
       return true
     } catch (error) {
-      console.error('Error print bill cart:', error)
+      console.error('Error print bill order:', error)
       return false
     }
   }

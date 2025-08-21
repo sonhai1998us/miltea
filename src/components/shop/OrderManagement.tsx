@@ -14,9 +14,10 @@ interface Props {
   formatDateTime: (d: Date) => string
   onToggleStatus: (o: Order) => void
   onBackToOrder: () => void
+  onPrintBill: (o: Order) => void
 }
 
-function OrderManagementBase({ orders, formatPrice, formatDateTime, onToggleStatus, onBackToOrder }: Props) {
+function OrderManagementBase({ orders, formatPrice, formatDateTime, onToggleStatus, onBackToOrder, onPrintBill }: Props) {
   if (!orders.length) {
     return (
       <div className="p-4 max-w-md mx-auto pb-24">
@@ -79,6 +80,14 @@ function OrderManagementBase({ orders, formatPrice, formatDateTime, onToggleStat
             <div className="flex justify-between items-center">
               <span className="font-bold text-lg">Tổng cộng:</span>
               <span className="font-bold text-xl text-green-600">{formatPrice(order.total_amount)}</span>
+            </div>
+            <div className="flex gap-2 mt-3">
+              <Button variant="outline" onClick={() => onPrintBill(order)} className="flex-1 border-green-300 text-green-700">
+                In hóa đơn
+              </Button>
+              <Button variant="default" onClick={() => onToggleStatus(order)} className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600">
+                {order.is_completed ? "Đánh dấu chưa xong" : "Đánh dấu hoàn tất"}
+              </Button>
             </div>
           </CardContent>
         </Card>

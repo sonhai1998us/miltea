@@ -42,7 +42,6 @@ interface ShopSheetsProps {
   onChangeDiscount: (amount: number) => void
   onApplyDiscount: () => void
   onClearDiscount: () => void
-  onPrintCart: () => void,
   onBackToCart: () => void
 }
 
@@ -83,7 +82,6 @@ export const ShopSheets = ({
   onChangeDiscount,
   onApplyDiscount,
   onClearDiscount,
-  onPrintCart,
   onBackToCart,
 }: ShopSheetsProps) => {
   return (
@@ -146,7 +144,6 @@ export const ShopSheets = ({
         onClose={onBackToCart}
         onNext={onPaymentMethodNext}
         onConfirm={onCompleteOrder}
-        onPrintBill={onPrintCart}
         onPaymentChange={onPaymentChange}
         onCashChange={onCashChange}
         formatInputNumber={formatInputNumber}
