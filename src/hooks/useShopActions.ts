@@ -154,10 +154,10 @@ export const useShopActions = (
       }
     }
     setCashError("")
-
+    const now = new Date();
     const orderData = {
       payment_method_id: paymentMethod === "cash" ? 1 : 2,
-      order_time: new Date(),
+      order_time: new Date(now.getTime() + 7 * 60 * 60 * 1000),
       total_amount: getTotalCartPrice,
       is_completed: 0,
       discount_amount: discountLocked ? discountAmount : 0,
@@ -241,8 +241,9 @@ export const useShopActions = (
     handleStartCheckout,
     handlePaymentMethodNext,
     handleCompleteOrder,
-    printOrderBill: useCallback((order: Order) => {
-      ShopService.printBill(order)
+    printOrderBill: useCallback(() => {
+      // Popup will be handled by OrderManagement component
+      // No need to call API directly
     }, []),
     toggleOrderStatus,
   }

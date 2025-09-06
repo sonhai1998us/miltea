@@ -1,12 +1,13 @@
 "use client"
 
-import { memo } from "react"
+import { memo, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Clock, CheckCircle, Circle } from "lucide-react"
 import { Separator } from "@/components/ui/separator"
 import { Order, Topping } from "@/types/shop"
+import { InvoicePopup } from "./InvoicePopup"
 
 interface Props {
   orders: Order[]
@@ -17,7 +18,20 @@ interface Props {
   onPrintBill: (o: Order) => void
 }
 
-function OrderManagementBase({ orders, formatPrice, formatDateTime, onToggleStatus, onBackToOrder, onPrintBill }: Props) {
+function OrderManagementBase({ orders, formatPrice, formatDateTime, onToggleStatus, onBackToOrder }: Props) {
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
+  const [isInvoiceOpen, setIsInvoiceOpen] = useState(false)
+
+  const handlePrintBill = (order: Order) => {
+    setSelectedOrder(order)
+    setIsInvoiceOpen(true)
+  }
+
+  const handleCloseInvoice = () => {
+    setIsInvoiceOpen(false)
+    setSelectedOrder(null)
+  }
+
   if (!orders.length) {
     return (
       <div className="p-4 max-w-md mx-auto pb-24">
@@ -32,7 +46,7 @@ function OrderManagementBase({ orders, formatPrice, formatDateTime, onToggleStat
   }
 
   return (
-    <div className="p-4 max-w-md mx-auto pb-24 space-y-4">
+    <div className="p-4 max-w-md mx-auto pb-24 space-y-4 print:hidden">
       {orders.map((order) => (
         <Card key={order.id} className={`border-2 ${order.is_completed ? "border-green-200 bg-green-50" : "border-green-200"}`}>
           <CardContent className="p-4">
@@ -82,7 +96,7 @@ function OrderManagementBase({ orders, formatPrice, formatDateTime, onToggleStat
               <span className="font-bold text-xl text-green-600">{formatPrice(order.total_amount)}</span>
             </div>
             <div className="flex gap-2 mt-3">
-              <Button variant="outline" onClick={() => onPrintBill(order)} className="flex-1 border-green-300 text-green-700">
+              <Button variant="outline" onClick={() => handlePrintBill(order)} className="flex-1 border-green-300 text-green-700">
                 In hóa đơn
               </Button>
               <Button variant="default" onClick={() => onToggleStatus(order)} className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600">
@@ -92,6 +106,15 @@ function OrderManagementBase({ orders, formatPrice, formatDateTime, onToggleStat
           </CardContent>
         </Card>
       ))}
+      
+      {/* Invoice Popup */}
+      <InvoicePopup
+        isOpen={isInvoiceOpen}
+        onClose={handleCloseInvoice}
+        order={selectedOrder}
+        formatPrice={formatPrice}
+        formatDateTime={formatDateTime}
+      />
     </div>
   )
 }

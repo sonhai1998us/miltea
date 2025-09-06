@@ -12,7 +12,7 @@ interface BottomNavProps {
 
 function BottomNavBase({ activeTab, pendingOrders, onChangeTab }: BottomNavProps) {
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-30 shadow-lg">
+    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-30 shadow-lg print:hidden">
       <div className="max-w-md mx-auto">
         <div className="flex">
           <button
