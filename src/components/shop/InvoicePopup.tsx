@@ -29,7 +29,7 @@ function InvoicePopupBase({ isOpen, onClose, order, formatPrice, formatDateTime 
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-md mx-auto max-h-[90vh] print:max-h-none print:border-none overflow-y-auto print:bg-white">
         <DialogHeader className="print:hidden">
-          <DialogTitle className="text-center text-2xl font-bold text-green-700">
+          <DialogTitle className="text-center text-xl font-bold text-green-700">
             HÓA ĐƠN BÁN HÀNG
           </DialogTitle>
         </DialogHeader>
@@ -38,10 +38,10 @@ function InvoicePopupBase({ isOpen, onClose, order, formatPrice, formatDateTime 
         <div id="invoice-print" className="space-y-4 print:space-y-1 print:bg-white print:text-black">
           {/* Header */}
           <div className="text-center border-b-2 border-green-200 pb-4 print:border-b-2 print:border-black print:pb-2">
-            <h1 className="text-3xl font-bold text-green-700 print:text-2xl print:text-black">Lá và Sương</h1>
-            <p className="text-base text-gray-600 print:text-lg print:text-black">Cà phê -Trà trái cây - Trà sữa</p>
-            <p className="text-sm text-gray-500 print:text-lg print:text-black">36/27B Đ. Số 4, Thủ Đức, Hồ Chí Minh</p>
-            <p className="text-sm text-gray-500 print:text-lg print:text-black">ĐT: 0931 792 220</p>
+            <h1 className="text-2xl font-bold text-green-700 print:text-2xl print:text-black">Lá và Sương</h1>
+            <p className="text-sm text-gray-600 print:text-lg print:text-black">Cà phê -Trà trái cây - Trà sữa</p>
+            <p className="text-xs text-gray-500 print:text-lg print:text-black">36/27B Đ. Số 4, Thủ Đức, Hồ Chí Minh</p>
+            <p className="text-xs text-gray-500 print:text-lg print:text-black">ĐT: 0931 792 220</p>
           </div>
 
           {/* Order Info */}
@@ -50,11 +50,11 @@ function InvoicePopupBase({ isOpen, onClose, order, formatPrice, formatDateTime 
               <span className="font-semibold print:text-base print:text-black">Mã đơn:</span>
               <span className="font-bold text-green-600 print:text-base print:text-black">#{order.id.toString().slice(-6)}</span>
             </div>
-            <div className="flex justify-between print:text-lg">
+            <div className="flex justify-between print:text-base">
               <span className="font-semibold print:text-base print:text-black">Ngày:</span>
               <span className="print:text-base print:text-black">{formatDateTime(order.order_time)}</span>
             </div>
-            <div className="flex justify-between print:text-lg">
+            <div className="flex justify-between print:text-base">
               <span className="font-semibold print:text-base print:text-black">Thanh toán:</span>
               <span className="font-semibold print:text-base print:text-black">
                 {order.payment_method_id === 1 ? "Tiền mặt" : "Chuyển khoản"}
@@ -66,13 +66,13 @@ function InvoicePopupBase({ isOpen, onClose, order, formatPrice, formatDateTime 
 
           {/* Items */}
           <div className="space-y-2 print:text-black">
-            <h3 className="font-bold text-xl text-center print:text-base print:text-black">HÓA ĐƠN BÁN HÀNG</h3>
+            <h3 className="font-bold text-lg text-center print:text-base print:text-black">HÓA ĐƠN BÁN HÀNG</h3>
             {order.items.map((item) => (
-              <div key={item.id} className="border border-gray-200 rounded-lg p-4 print:border-black print:p-3 print:rounded-none">
-                <div className="flex justify-between items-start mb-3 print:mb-2">
+              <div key={item.id} className="border border-gray-200 rounded-lg p-3 print:border-black print:p-2 print:rounded-none">
+                <div className="flex justify-between items-start mb-2 print:mb-1">
                   <div className="flex-1">
                     <h4 className="font-semibold text-gray-800 print:text-lg print:text-black">{item.product_name}</h4>
-                    <p className="text-base text-gray-600 print:text-lg print:text-black">SL: {item.quantity}</p>
+                    <p className="text-sm text-gray-600 print:text-lg print:text-black">SL: {item.quantity}</p>
                   </div>
                   <div className="text-right">
                     <p className="font-bold text-green-600 print:text-lg print:text-black">
@@ -81,7 +81,7 @@ function InvoicePopupBase({ isOpen, onClose, order, formatPrice, formatDateTime 
                   </div>
                 </div>
                 
-                <div className="text-base text-gray-600 space-y-1 print:text-lg print:text-black">
+                <div className="text-sm text-gray-600 space-y-1 print:text-lg print:text-black">
                   <div className="print:text-base print:text-black">• {item.sweetness_name} - {item.ice_name}</div>
                   {item.size_name && (
                     <div className="print:text-base print:text-black">• Size: {item.size_name} (+{formatPrice(item.size_price)})</div>
@@ -108,21 +108,21 @@ function InvoicePopupBase({ isOpen, onClose, order, formatPrice, formatDateTime 
           {/* Total */}
           <div className="space-y-2 print:text-black">
             {order.discount_amount > 0 && (
-              <div className="flex justify-between text-xl">
+              <div className="flex justify-between text-lg">
                 <span className="font-semibold print:text-base print:text-black">Giảm giá:</span>
                 <span className="font-bold text-red-600 print:text-base print:text-black">-{formatPrice(order.discount_amount)}</span>
               </div>
             )}
-            <div className="flex justify-between text-2xl border-t-2 border-green-200 pt-2 print:border-t-4 print:border-black">
+            <div className="flex justify-between text-xl border-t-2 border-green-200 pt-2 print:border-t-4 print:border-black">
               <span className="font-bold print:text-base print:text-black mt-2">TỔNG CỘNG:</span>
-              <span className="font-bold text-green-600 text-3xl print:text-base print:text-black mt-2">
+              <span className="font-bold text-green-600 text-2xl print:text-base print:text-black mt-2">
                 {formatPrice(order.total_amount)}
               </span>
             </div>
           </div>
 
           {/* Footer */}
-          <div className="text-center text-sm text-gray-500 pt-4 border-t border-gray-200 print:border-t-2 print:border-black print:text-black">
+          <div className="text-center text-xs text-gray-500 pt-4 border-t border-gray-200 print:border-t-2 print:border-black print:text-black">
             <p className="print:text-base print:text-black">Cảm ơn quý khách đã sử dụng dịch vụ!</p>
             <p className="print:text-base print:text-black">Hẹn gặp lại quý khách lần sau</p>
           </div>
@@ -132,15 +132,15 @@ function InvoicePopupBase({ isOpen, onClose, order, formatPrice, formatDateTime 
         <div className="flex gap-3 mt-6 print:hidden">
           <Button 
             onClick={handlePrint} 
-            className="flex-1 bg-green-600 hover:bg-green-700 flex items-center gap-2 text-lg"
+            className="flex-1 bg-green-600 hover:bg-green-700 flex items-center gap-2"
           >
-            <Printer className="w-5 h-5" />
+            <Printer className="w-4 h-4" />
             In hóa đơn
           </Button>
           <Button 
             onClick={onClose} 
             variant="outline" 
-            className="flex-1 border-green-300 text-green-700 hover:bg-green-50 text-lg"
+            className="flex-1 border-green-300 text-green-700 hover:bg-green-50"
           >
             Đóng
           </Button>
