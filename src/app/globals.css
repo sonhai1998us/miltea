@@ -892,10 +892,10 @@ span.flatpickr-weekday,
   }
 }
 
-/* Print styles for invoice - Optimized for 80mm roll paper */
+/* Print styles for invoice - Optimized for 200mm roll paper */
 @media print {
   @page {
-    size: 80mm auto;
+    size: 200mm auto;
     margin: 0;
   }
   
@@ -907,7 +907,7 @@ span.flatpickr-weekday,
   body {
     margin: 0 !important;
     padding: 0 !important;
-    width: 80mm !important;
+    width: 200mm !important;
     font-size: 12px !important;
     line-height: 1.2 !important;
   }
@@ -952,8 +952,8 @@ span.flatpickr-weekday,
   [data-radix-dialog-content] {
     position: static !important;
     transform: none !important;
-    max-width: 80mm !important;
-    width: 80mm !important;
+    max-width: 200mm !important;
+    width: 200mm !important;
     height: auto !important;
     margin: 0 !important;
     padding: 8px !important;
@@ -971,8 +971,8 @@ span.flatpickr-weekday,
   }
   
   .print\:max-w-none {
-    max-width: 80mm !important;
-    width: 80mm !important;
+    max-width: 200mm !important;
+    width: 200mm !important;
   }
   
   .print\:mx-0 {
@@ -1028,12 +1028,12 @@ span.flatpickr-weekday,
     display: none !important;
   }
   
-  /* Ensure proper spacing and layout for 80mm */
+  /* Ensure proper spacing and layout for 200mm */
   .print\:max-w-none {
     position: static !important;
     left: auto !important;
     top: auto !important;
-    width: 80mm !important;
+    width: 200mm !important;
   }
   
   /* Force show all text content */
@@ -1074,7 +1074,7 @@ span.flatpickr-weekday,
     display: flex !important;
   }
   
-  /* Ensure proper spacing for 80mm paper */
+  /* Ensure proper spacing for 200mm paper */
   .space-y-1 > * + * {
     margin-top: 0.25rem !important;
   }
@@ -1091,7 +1091,7 @@ span.flatpickr-weekday,
     margin-top: 0.5rem !important;
   }
   
-  /* Optimize for 80mm width */
+  /* Optimize for 200mm width */
   .flex {
     display: block !important;
   }
