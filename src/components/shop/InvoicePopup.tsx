@@ -39,7 +39,7 @@ function InvoicePopupBase({ isOpen, onClose, order, formatPrice, formatDateTime 
           {/* Header */}
           <div className="text-center border-b-2 border-green-200 pb-4 print:border-b-2 print:border-black print:pb-2">
             <h1 className="text-2xl font-bold text-green-700 print:text-xl print:text-black">Lá và Sương</h1>
-            <p className="text-sm text-gray-600 print:text-xs print:text-black">Cà phê -Trà trái cây - Trà sữa</p>
+            <p className="text-sm text-gray-600 print:text-xs print:text-black">Cà phê - Trà sữa - Trà trái cây</p>
             <p className="text-xs text-gray-500 print:text-xs print:text-black">36/27B Đ. Số 4, Thủ Đức, Hồ Chí Minh</p>
             <p className="text-xs text-gray-500 print:text-xs print:text-black">ĐT: 0931 792 220</p>
           </div>
@@ -66,6 +66,7 @@ function InvoicePopupBase({ isOpen, onClose, order, formatPrice, formatDateTime 
 
           {/* Items */}
           <div className="space-y-2 print:text-black">
+            <img src={"/images/logo/logo3.png"} alt="" className="w-full print:text-sm flex h-16 object-contain rounded-lg" />
             <h3 className="font-bold text-lg text-center print:text-sm print:text-black">HÓA ĐƠN BÁN HÀNG</h3>
             {order.items.map((item) => (
               <div key={item.id} className="border border-gray-200 rounded-lg p-3 print:border-black print:p-2 print:rounded-none">
@@ -76,13 +77,13 @@ function InvoicePopupBase({ isOpen, onClose, order, formatPrice, formatDateTime 
                   </div>
                   <div className="text-right">
                     <p className="font-bold text-green-600 print:text-xs print:text-black">
-                      {formatPrice((item.unit_price + item.toppings.reduce((s, t) => s + t.price, 0)) * item.quantity)}
+                      {formatPrice((item.unit_price + item.toppings.reduce((s, t) => s + t.price, 0) + item.size_price) * item.quantity)}
                     </p>
                   </div>
                 </div>
                 
                 <div className="text-sm text-gray-600 space-y-1 print:text-xs print:text-black">
-                  <div className="print:text-sm print:text-black">• {item.sweetness_name} - {item.ice_name}</div>
+                  <div className="print:text-sm print:text-black">• Đơn giá: {formatPrice(item.product_price)}</div>
                   {item.size_name && (
                     <div className="print:text-sm print:text-black">• Size: {item.size_name} (+{formatPrice(item.size_price)})</div>
                   )}
@@ -95,8 +96,9 @@ function InvoicePopupBase({ isOpen, onClose, order, formatPrice, formatDateTime 
                       ))}
                     </div>
                   )}
+                  <div className="print:text-sm print:text-black">• {item.sweetness_name} - {item.ice_name}</div>
                   {item.notes && (
-                    <div className="text-green-600 font-medium print:text-sm print:text-black">• {item.notes}</div>
+                    <div className="text-green-600 font-medium print:text-sm print:text-black">• Ghi chú: {item.notes}</div>
                   )}
                 </div>
               </div>
