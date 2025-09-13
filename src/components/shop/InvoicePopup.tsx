@@ -22,7 +22,7 @@ function InvoicePopupBase({ isOpen, onClose, order, formatPrice, formatDateTime 
     // Ensure all content is visible before printing
     setTimeout(() => {
       window.print()
-    }, 100)
+    }, 500)
   }
 
   return (
