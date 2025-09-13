@@ -95,7 +95,7 @@ function OrderManagementBase({ orders, formatPrice, formatDateTime, onToggleStat
               <span className="font-bold text-lg">Tổng cộng:</span>
               <span className="font-bold text-xl text-green-600">{formatPrice(order.total_amount)}</span>
             </div>
-            <div className="flex gap-2 mt-3">
+            <div className="flex gap-2 mt-3 print:hidden">
               <Button variant="outline" onClick={() => handlePrintBill(order)} className="flex-1 border-green-300 text-green-700">
                 In hóa đơn
               </Button>
