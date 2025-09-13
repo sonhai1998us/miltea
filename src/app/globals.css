@@ -914,7 +914,7 @@ span.flatpickr-weekday,
   
   /* Hide everything except the invoice content */
   body * {
-    visibility: hidden !important;
+    /* visibility: hidden !important; */
   }
   .print-content {
     overflow: visible !important; /* Ngăn cắt nội dung */
