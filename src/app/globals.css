@@ -1134,3 +1134,14 @@ span.flatpickr-weekday,
     padding-top: 6px !important;
   }
 }
+
+/* Custom no-print class to override flex display */
+.no-print {
+  display: flex !important;
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+}

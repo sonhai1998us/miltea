@@ -97,7 +97,7 @@ function OrderManagementBase({ orders, formatPrice, formatDateTime, onToggleStat
             </div>
             <div className="flex gap-2 mt-3 print:hidden">
               <Button variant="outline" onClick={() => handlePrintBill(order)} className="flex-1 border-green-300 text-green-700">
-                In hóa đơn
+                In hóa đơn22
               </Button>
               <Button variant="default" onClick={() => onToggleStatus(order)} className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600">
                 {order.is_completed ? "Đánh dấu chưa xong" : "Đánh dấu hoàn tất"}

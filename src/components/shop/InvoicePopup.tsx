@@ -131,7 +131,7 @@ function InvoicePopupBase({ isOpen, onClose, order, formatPrice, formatDateTime 
         </div>
 
         {/* Action Buttons */}
-        <div className="flex gap-3 mt-6 print:hidden">
+        <div className="flex gap-3 mt-6 no-print">
           <Button 
             onClick={handlePrint} 
             className="flex-1 bg-green-600 hover:bg-green-700 flex items-center gap-2"
