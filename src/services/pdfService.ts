@@ -9,7 +9,6 @@ import autoTable, {
 import jsPDF from 'jspdf'
 import { Order, Topping } from '@/types/shop'
 
-// ==== Augmentation cho jsPDF để có kiểu lastAutoTable & autoTable & props tùy biến ====
 declare module 'jspdf' {
   interface jsPDF {
     autoTable: (options: AutoTableOptions) => jsPDF
@@ -26,25 +25,86 @@ export interface PDFServiceConfig {
   logoDataUrl?: string
   qrDataUrl?: string
   store?: { name?: string; slogan?: string; address?: string; phone?: string }
-  theme?: {
-    primary?: [number, number, number]
-    onPrimary?: [number, number, number]
-    subtle?: [number, number, number]
-    border?: [number, number, number]
-    text?: [number, number, number]
-    textMuted?: [number, number, number]
-    detailBg?: [number, number, number]
-  }
+  /** Với bản in nhiệt hãy bỏ qua theme màu; class sẽ ép BW */
+  theme?: never
 }
 
-// Kiểu raw để gắn cờ cho hàng chi tiết
+/** Cell raw flag */
 type DetailCellRaw = { __isDetail?: boolean }
+
+/** Công cụ ảnh: chuyển ảnh sang monochrome (đen/ trắng) để in rõ nét */
+async function toMonochromeDataURL(
+  src: string,
+  opt?: { threshold?: number; dither?: boolean; mime?: 'image/png' | 'image/jpeg' }
+): Promise<string> {
+  const threshold = Math.min(255, Math.max(0, opt?.threshold ?? 180)) // 0..255; 180 in rõ hơn
+  const mime = opt?.mime ?? 'image/png'
+  return new Promise((resolve, reject) => {
+    if (typeof window === 'undefined') return reject(new Error('Client only'))
+    const img = new Image()
+    img.crossOrigin = 'anonymous'
+    img.onload = () => {
+      try {
+        const canvas = document.createElement('canvas')
+        canvas.width = img.naturalWidth
+        canvas.height = img.naturalHeight
+        const ctx = canvas.getContext('2d', { willReadFrequently: true })
+        if (!ctx) return reject(new Error('Canvas 2D not available'))
+        ctx.drawImage(img, 0, 0)
+
+        const { data, width, height } = ctx.getImageData(0, 0, canvas.width, canvas.height)
+        // Copy to mutable working buffer for dithering
+        const buf = new Uint8ClampedArray(data)
+
+        const idx = (x: number, y: number) => (y * width + x) * 4
+        const clamp = (v: number) => (v < 0 ? 0 : v > 255 ? 255 : v)
+
+        for (let y = 0; y < height; y++) {
+          for (let x = 0; x < width; x++) {
+            const i = idx(x, y)
+            // Luma (BT.601) -> grayscale
+            const gray = 0.299 * buf[i] + 0.587 * buf[i + 1] + 0.114 * buf[i + 2]
+            const newVal = gray >= threshold ? 255 : 0 // binary
+            const err = (gray - newVal)
+            buf[i] = buf[i + 1] = buf[i + 2] = newVal
+            buf[i + 3] = 255
+
+            if (opt?.dither) {
+              // Floyd–Steinberg lỗi phân bố (chỉ áp cho kênh gray)
+              const spread = (xx: number, yy: number, factor: number) => {
+                if (xx < 0 || xx >= width || yy < 0 || yy >= height) return
+                const j = idx(xx, yy)
+                const g = 0.299 * buf[j] + 0.587 * buf[j + 1] + 0.114 * buf[j + 2]
+                const g2 = clamp(g + err * factor)
+                const bw = g2 >= threshold ? 255 : 0
+                buf[j] = buf[j + 1] = buf[j + 2] = bw
+              }
+              // Phân phối: (x+1,y) 7/16; (x-1,y+1) 3/16; (x,y+1) 5/16; (x+1,y+1) 1/16
+              spread(x + 1, y, 7 / 16)
+              spread(x - 1, y + 1, 3 / 16)
+              spread(x, y + 1, 5 / 16)
+              spread(x + 1, y + 1, 1 / 16)
+            }
+          }
+        }
+
+        const out = new ImageData(buf, width, height)
+        ctx.putImageData(out, 0, 0)
+        resolve(canvas.toDataURL(mime))
+      } catch (e) {
+        reject(e as Error)
+      }
+    }
+    img.onerror = () => reject(new Error('Image load error: ' + src))
+    img.src = src
+  })
+}
 
 export class PDFService {
   private config: PDFServiceConfig
   constructor(config: PDFServiceConfig) { this.config = config }
 
-  // ---------- TEXT & IMAGE HELPERS ----------
+  // ---------- HELPERS ----------
   private softWrap(s: string, every = 14) {
     if (!s) return s
     s = s.replace(/([/_\-.@:]+)/g, '$1\u200b')
@@ -55,58 +115,36 @@ export class PDFService {
     const mime = dataUrl.slice(5, dataUrl.indexOf(';'))
     const subtype = (mime.split('/')[1] || '').toUpperCase()
     if (subtype === 'JPG') return 'JPEG'
-    if (subtype === 'JPEG' || subtype === 'PNG' || subtype === 'WEBP')
-      return subtype as 'PNG' | 'JPEG' | 'WEBP'
+    if (subtype === 'JPEG' || subtype === 'PNG' || subtype === 'WEBP') return subtype as any // eslint-disable-line
     return 'PNG'
   }
 
   private addImageSmart(doc: jsPDF, dataUrl: string, x: number, y: number, w: number, h: number) {
     const fmt = this.getFormatFromDataURL(dataUrl)
+    // In BW, giữ 'FAST' để không blur
     doc.addImage(dataUrl, fmt, x, y, w, h, undefined, 'FAST')
   }
 
-  private imageToDataURL(src: string, mime: 'image/png'|'image/jpeg' = 'image/png'): Promise<string> {
-    return new Promise((resolve, reject) => {
-      if (typeof window === 'undefined') return reject(new Error('Client only'))
-      const img = new Image()
-      img.onload = () => {
-        try {
-          const canvas = document.createElement('canvas')
-          canvas.width = img.naturalWidth
-          canvas.height = img.naturalHeight
-          const ctx = canvas.getContext('2d')
-          if (!ctx) return reject(new Error('Canvas 2D not available'))
-          ctx.drawImage(img, 0, 0)
-          resolve(canvas.toDataURL(mime))
-        } catch (e) { reject(e as Error) }
-      }
-      img.onerror = () => reject(new Error('Image load error: ' + src))
-      img.src = src
-    })
-  }
-
-  private async resolveImage(input?: string, fallbackPath?: string): Promise<string | null> {
-    if (input && input.startsWith('data:')) return input
+  private async resolveImageBW(input?: string, fallbackPath?: string): Promise<string | null> {
     const path = input || fallbackPath
     if (!path) return null
-    const isJpeg = /\.jpe?g$/i.test(path)
-    return await this.imageToDataURL(path, isJpeg ? 'image/jpeg' : 'image/png')
+    // Nếu đã là dataURL → convert trực tiếp; nếu là URL → load rồi convert
+    if (path.startsWith('data:')) {
+      return await toMonochromeDataURL(path, { threshold: 180, dither: true, mime: 'image/png' })
+    }
+    return await toMonochromeDataURL(path, { threshold: 180, dither: true, mime: 'image/png' })
   }
 
-  // ---------- RENDER NỘI DUNG (dùng cho 2-pass) ----------
+  // ---------- RENDER ----------
   private renderReceipt(doc: jsPDF, order: Order): number {
     const pageWidth = doc.internal.pageSize.getWidth()
     const marginX = 6
     const contentWidth = pageWidth - marginX * 2
     let y = 10
 
-    const primary   = this.config.theme?.primary   ?? [0,100,0]
-    const onPrimary = this.config.theme?.onPrimary ?? [255,255,255]
-    const subtle    = this.config.theme?.subtle    ?? [245,250,246]
-    const border    = this.config.theme?.border    ?? [0,100,0]
-    const text      = this.config.theme?.text      ?? [30,30,30]
-    const textMuted = this.config.theme?.textMuted ?? [110,110,110]
-    const detailBg  = this.config.theme?.detailBg  ?? [250,252,250]
+    // BW palette (ép cứng)
+    const BLACK: [number, number, number] = [0, 0, 0]
+    const WHITE: [number, number, number] = [255, 255, 255]
 
     const store = {
       name:    this.config.store?.name    ?? 'Lá và Sương',
@@ -116,40 +154,48 @@ export class PDFService {
     }
 
     const centerText = (t: string, yy: number, fs = 12, f: 'normal'|'bold'='normal') => {
-      doc.setFont('times', f); doc.setFontSize(fs)
+      doc.setFont('times', f); doc.setFontSize(fs); doc.setTextColor(...BLACK)
       const x = (pageWidth - doc.getTextWidth(t)) / 2
       doc.text(t, x, yy)
       return yy + fs * 0.5 + 1
     }
     const drawDivider = (yy: number, lw = .35) => {
-      doc.setDrawColor(...(border as [number,number,number])); doc.setLineWidth(lw)
+      doc.setDrawColor(...BLACK); doc.setLineWidth(lw)
       doc.line(marginX, yy, pageWidth - marginX, yy)
     }
 
-    // Logo (nếu đã resolve trước, gắn vào doc._resolvedLogo)
+    // Logo BW
     if (doc._resolvedLogo) {
-      try { this.addImageSmart(doc, doc._resolvedLogo, marginX, y - 2, 12, 12); y += 2 } catch {}
+      try {
+        // Đặt logo kích thước nhỏ gọn để nét đen rõ
+        this.addImageSmart(doc, doc._resolvedLogo, marginX, y - 2, 12, 12)
+        y += 2
+      } catch {}
     }
 
-    doc.setTextColor(primary[0],primary[1],primary[2]); y = centerText(store.name, y, 16, 'bold')
-    doc.setTextColor(100,100,100); y = centerText(store.slogan, y, 9); y = centerText(store.address, y, 9); y = centerText(store.phone, y, 9)
-    y += 3; drawDivider(y); y += 7
-    doc.setTextColor(0,0,0); y = centerText('HÓA ĐƠN BÁN HÀNG', y, 12, 'bold'); y += 2
+    y = centerText(store.name, y, 16, 'bold')
+    y = centerText(store.slogan, y, 9, 'normal')
+    y = centerText(store.address, y, 9, 'normal')
+    y = centerText(store.phone, y, 9, 'normal')
 
-    // Thông tin đơn + QR (nếu đã resolve trước)
+    y += 3; drawDivider(y, .4); y += 7
+    y = centerText('HÓA ĐƠN BÁN HÀNG', y, 12, 'bold'); y += 2
+
+    // Info + QR
     const info: Array<[string,string]> = [
       ['Mã đơn', `#${order.id?.toString().slice(-6) ?? '------'}`],
       ['Ngày', this.config.formatDateTime(order.order_time)],
       ['Thanh toán', order.payment_method_id === 1 ? 'Tiền mặt' : 'Chuyển khoản'],
     ]
-    doc.setFont('times','normal'); doc.setFontSize(9.5); doc.setTextColor(50,50,50)
+    doc.setFont('times','normal'); doc.setFontSize(9.5); doc.setTextColor(...BLACK)
     const qrSize = 24, infoRightX = pageWidth - marginX - qrSize
 
     if (doc._resolvedQR) {
       try {
-        doc.setDrawColor(230)
+        // Khung đen mảnh để QR không bị “bể”
+        doc.setDrawColor(...BLACK); doc.setLineWidth(0.3)
         doc.rect(infoRightX, y, qrSize, qrSize, 'S')
-        this.addImageSmart(doc, doc._resolvedQR, infoRightX + 1.5, y + 1.5, qrSize - 3, qrSize - 3)
+        this.addImageSmart(doc, doc._resolvedQR, infoRightX + 1.2, y + 1.2, qrSize - 2.4, qrSize - 2.4)
       } catch {}
     }
 
@@ -160,12 +206,12 @@ export class PDFService {
       doc.setFont('times','normal')
       const maxW = doc._resolvedQR ? (infoRightX - 2 - (marginX + keyW)) : (contentWidth - keyW)
       doc.text(doc.splitTextToSize(val, Math.max(20, maxW)), marginX + keyW, infoY)
-      infoY += 5.5
+      infoY += 5.2
     })
     y = Math.max(infoY, doc._resolvedQR ? y + qrSize + 2 : infoY); y += 4; drawDivider(y,.3); y += 3
 
-    // BẢNG HÀNG HÓA
-    const qtyW = 8, unitW = 20, totalW = 20
+    // BẢNG HÀNG HÓA (BW thuần)
+    const qtyW = 8, unitW = 22, totalW = 24
     const productW = contentWidth - (qtyW + unitW + totalW)
 
     const rows: RowInput[] = []
@@ -189,8 +235,8 @@ export class PDFService {
       rows.push([
         { content: name } as CellInput,
         String(item.quantity ?? 1),
-        this.config.formatPrice(unitPrice),     // đơn giá (gốc)
-        this.config.formatPrice(lineTotal),     // thành tiền
+        this.config.formatPrice(unitPrice),
+        this.config.formatPrice(lineTotal),
       ])
 
       if (detailLines.length) {
@@ -201,12 +247,13 @@ export class PDFService {
             colSpan: 4,
             styles: {
               fontSize: 8.5,
-              textColor: textMuted as [number,number,number],
+              textColor: BLACK,
               cellPadding: { top: 1.6, right: 2, bottom: 1.8, left: 8 },
               halign: 'left',
-              fillColor: detailBg as [number,number,number],
+              // Không fill color để tránh xám → trắng (BW)
+              fillColor: WHITE,
               lineWidth: 0.2,
-              lineColor: border as [number,number,number],
+              lineColor: BLACK,
               overflow: 'linebreak',
             },
             raw: detailRaw,
@@ -225,21 +272,24 @@ export class PDFService {
       styles: {
         font: 'times',
         fontSize: 9.5,
-        lineColor: border as [number,number,number],
-        lineWidth: 0.2,
+        lineColor: BLACK,
+        lineWidth: 0.25,
         cellPadding: { top: 2.0, right: 2, bottom: 2.0, left: 2 },
         halign: 'left',
         valign: 'middle',
-        textColor: text as [number,number,number],
+        textColor: BLACK,
+        fillColor: WHITE,
         overflow: 'linebreak',
       },
       headStyles: {
-        fillColor: primary as [number,number,number],
-        textColor: onPrimary as [number,number,number],
+        fillColor: WHITE,           // không nền
+        textColor: BLACK,
         fontStyle: 'bold',
         halign: 'center',
+        lineColor: BLACK,
+        lineWidth: 0.4,
       },
-      alternateRowStyles: { fillColor: subtle as [number,number,number] },
+      alternateRowStyles: { fillColor: WHITE }, // bỏ sọc xám
       columnStyles: {
         0: { cellWidth: productW, halign: 'left',  overflow: 'linebreak' },
         1: { cellWidth: qtyW,    halign: 'center', overflow: 'ellipsize' },
@@ -251,15 +301,21 @@ export class PDFService {
         const isDetail = (data.cell.raw as DetailCellRaw | undefined)?.__isDetail
         if (data.section === 'body' && isDetail && data.column.index === 0) {
           const lx = data.cell.x + 5.5
-          doc.setDrawColor(190); doc.setLineWidth(0.3)
-          doc.line(lx, data.cell.y + 1.2, lx, data.cell.y + data.cell.height - 1.2)
+          const y1 = data.cell.y + 1.0
+          const y2 = data.cell.y + (Number.isFinite(data.cell.height) ? data.cell.height : 0) - 1.0
+      
+          if ([lx, y1, lx, y2].every(Number.isFinite)) {
+            data.doc.setDrawColor(0, 0, 0)
+            data.doc.setLineWidth(0.25)
+            data.doc.line(lx, y1, lx, y2)
+          }
         }
-      },
+      }
     })
 
     y = (doc.lastAutoTable?.finalY ?? y) + 5
 
-    // TỔNG KẾT
+    // TỔNG KẾT (BW, dòng tổng đậm)
     const itemsSubtotal = (order.items || []).reduce((sum, item) => {
       const unitPrice = item.product_price ?? 0
       const sizePrice = item.size_price ?? 0
@@ -284,38 +340,64 @@ export class PDFService {
         font: 'times',
         fontSize: 10.5,
         cellPadding: { top: 2.5, right: 2, bottom: 2.5, left: 2 },
-        textColor: text as [number,number,number],
+        textColor: BLACK,
+        fillColor: WHITE,
         overflow: 'linebreak',
       },
-      columnStyles: { 0: { cellWidth: contentWidth - 30, halign: 'left' }, 1: { cellWidth: 30, halign: 'right' } },
-      didDrawCell: (data: CellHookData) => {
-        const isTotal = data.row.index === summaryRows.length - 1
-        if (isTotal) {
-          doc.setFillColor(240,248,240)
-          doc.setTextColor(primary[0], primary[1], primary[2]); doc.setFont('times','bold')
-        } else if (discount > 0 && data.row.index === 1) {
-          doc.setTextColor(200,0,0); doc.setFont('times','bold')
-        }
+      columnStyles: {
+        0: { cellWidth: contentWidth - 34, halign: 'left' },
+        1: { cellWidth: 34, halign: 'right' }
       },
+      didDrawCell: (data: CellHookData) => {
+        const isTotal = data.row.index === (data.table.body?.length ?? 0) - 1
+      
+        // Chỉ xử lý khi đang ở cột đầu để vẽ cho cả hàng
+        if (isTotal && data.column.index === 0) {
+          const doc = data.doc as jsPDF
+          const xL = data.cell.x
+          // Tính tổng width của cả hàng từ chính các cell (ổn định hơn data.table.width)
+          const rowCells: any[] = // eslint-disable-line
+            (data as any).row?.cells // eslint-disable-line
+              ? Object.values((data as any).row.cells) // eslint-disable-line
+              : []
+          const rowWidth = rowCells.reduce((sum, c: any) => sum + (c?.width || 0), 0) // eslint-disable-line
+      
+          const xR = xL + rowWidth
+          const yTop = data.cell.y
+          const yBot = data.cell.y + data.cell.height
+      
+          if ([xL, xR, yTop, yBot].every(Number.isFinite)) {
+            doc.setTextColor(0, 0, 0)
+            doc.setDrawColor(0, 0, 0)
+            doc.setLineWidth(0.5)
+            doc.line(xL, yTop, xR, yTop)
+            doc.line(xL, yBot, xR, yBot)
+            doc.setFont('times', 'bold')
+          }
+        } else if (data.row.index === 1 && (data.table.body?.length ?? 0) > 1) {
+          // Hàng "Giảm giá" (nếu có)
+          data.doc.setFont('times', 'bold')
+        }
+      }
     })
 
     y = (doc.lastAutoTable?.finalY ?? y) + 6
 
-    // Footer
-    doc.setDrawColor(230); doc.setLineWidth(0.3); doc.line(marginX, y, pageWidth - marginX, y); y += 5
-    doc.setFont('times','normal'); doc.setFontSize(9.5); doc.setTextColor(100,100,100)
+    // Footer (BW)
+    doc.setDrawColor(...BLACK); doc.setLineWidth(0.3); doc.line(marginX, y, pageWidth - marginX, y); y += 5
+    doc.setFont('times','normal'); doc.setFontSize(9.5); doc.setTextColor(...BLACK)
     const thank = 'Cảm ơn quý khách đã sử dụng dịch vụ! Hẹn gặp lại quý khách lần sau.'
     doc.text(doc.splitTextToSize(thank, contentWidth), marginX, y)
     y += 2
 
-    return y // yEnd dùng để tính chiều cao trang
+    return y
   }
 
-  // ---------- PUBLIC: tạo PDF dài tới hết nội dung ----------
+  // ---------- PUBLIC ----------
   async generateInvoice(order: Order): Promise<void> {
-    // Resolve ảnh trước (để 2-pass không tải lại)
-    const resolvedLogo = await this.resolveImage(this.config.logoDataUrl, '/images/logo/logo3.png').catch(() => null)
-    const resolvedQR   = await this.resolveImage(this.config.qrDataUrl).catch(() => null)
+    // Resolve ảnh → chuyển BW trước (để 2-pass không tải lại)
+    const resolvedLogo = await this.resolveImageBW(this.config.logoDataUrl, '/images/logo/logo3.png').catch(() => null)
+    const resolvedQR   = await this.resolveImageBW(this.config.qrDataUrl).catch(() => null)
 
     // PASS 1: doc tạm cao 2000mm để đo
     const docTmp: jsPDF = jsPDFCus('portrait', 'mm', [80, 2000])
@@ -335,25 +417,26 @@ export class PDFService {
     doc._resolvedQR = resolvedQR
     this.renderReceipt(doc, order)
 
-    // Xuất bằng Blob URL
+    // Xuất
     const blob = doc.output('blob')
-    const blobUrl = URL.createObjectURL(blob)
-    const w = window.open()
-    if (w) {
-      w.document.write(`
-        <html>
-          <head>
-            <title>Hóa đơn #${order.id?.toString().slice(-6) ?? '------'}</title>
-            <style>html,body{margin:0;padding:0;height:100%}iframe{width:100vw;height:100vh;border:none}</style>
-          </head>
-          <body><iframe src="${blobUrl}"></iframe></body>
-        </html>
-      `)
-      w.document.close()
-      w.addEventListener('unload', () => URL.revokeObjectURL(blobUrl))
-    } else {
-      doc.save(`hoa-don-\${order.id?.toString().slice(-6) ?? '------'}.pdf`)
-      URL.revokeObjectURL(blobUrl)
-    }
+const blobUrl = URL.createObjectURL(blob)
+
+const iframe = document.createElement('iframe')
+iframe.style.position = 'fixed'
+iframe.style.width = '0'
+iframe.style.height = '0'
+iframe.style.border = 'none'
+iframe.src = blobUrl
+document.body.appendChild(iframe)
+
+iframe.onload = () => {
+  setTimeout(() => {
+    iframe.contentWindow?.focus()
+    iframe.contentWindow?.print()
+    // Giải phóng sau in
+    URL.revokeObjectURL(blobUrl)
+    // document.body.removeChild(iframe)
+  }, 300)
+}
   }
 }
