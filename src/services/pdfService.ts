@@ -419,24 +419,25 @@ export class PDFService {
 
     // Xuất
     const blob = doc.output('blob')
-const blobUrl = URL.createObjectURL(blob)
-
-const iframe = document.createElement('iframe')
-iframe.style.position = 'fixed'
-iframe.style.width = '0'
-iframe.style.height = '0'
-iframe.style.border = 'none'
-iframe.src = blobUrl
-document.body.appendChild(iframe)
-
-iframe.onload = () => {
-  setTimeout(() => {
-    iframe.contentWindow?.focus()
-    iframe.contentWindow?.print()
-    // Giải phóng sau in
-    URL.revokeObjectURL(blobUrl)
-    // document.body.removeChild(iframe)
-  }, 300)
-}
+    const blobUrl = URL.createObjectURL(blob)
+    
+    const iframe = document.createElement('iframe')
+    iframe.style.position = 'fixed'
+    iframe.style.width = '0'
+    iframe.style.height = '0'
+    iframe.style.border = 'none'
+    iframe.style.pointerEvents = 'none'
+    iframe.src = blobUrl
+    document.body.appendChild(iframe)
+    
+    iframe.onload = () => {
+      // Mobile cần user-gesture: gọi từ sự kiện click
+      
+      iframe.contentWindow?.focus()
+      iframe.contentWindow?.print()
+      URL.revokeObjectURL(blobUrl)
+      console.log(1111111);
+      // document.body.removeChild(iframe)
+    }
   }
 }
