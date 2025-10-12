@@ -43,7 +43,6 @@ export default function FoxMilkTeaShop() {
         onQuantityChange={(id: number, newQuantity: number) => {
           state.setQuantities(updateQuantity(state.quantities, id, newQuantity))
         }}
-        onPrintBill={actions.printOrderBill}
       />
 
       <BottomNav

@@ -27,6 +27,8 @@
     "clsx": "^2.1.1",
     "dotenv": "^16.4.7",
     "flatpickr": "^4.6.13",
+    "jspdf": "^3.0.3",
+    "jspdf-autotable": "^5.0.2",
     "lucide-react": "^0.511.0",
     "next": "15.2.3",
     "react": "^19.0.0",

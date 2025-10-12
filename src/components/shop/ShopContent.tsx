@@ -13,7 +13,6 @@ interface ShopContentProps {
   onToggleOrderStatus: (order: Order) => void
   onBackToOrder: () => void
   onQuantityChange: (id: number, newQuantity: number) => void
-  onPrintBill: (order: Order) => void
 }
 
 export const ShopContent = ({
@@ -26,7 +25,6 @@ export const ShopContent = ({
   onToggleOrderStatus,
   onBackToOrder,
   onQuantityChange,
-  onPrintBill,
 }: ShopContentProps) => {
   // Memoized values
   const sortedOrders = sortOrders(orders)
@@ -55,7 +53,6 @@ export const ShopContent = ({
           formatDateTime={formatDateTime}
           onToggleStatus={onToggleOrderStatus}
           onBackToOrder={onBackToOrder}
-          onPrintBill={onPrintBill}
         />
       )}
     </>

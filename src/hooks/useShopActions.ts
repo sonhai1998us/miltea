@@ -241,10 +241,6 @@ export const useShopActions = (
     handleStartCheckout,
     handlePaymentMethodNext,
     handleCompleteOrder,
-    printOrderBill: useCallback(() => {
-      // Popup will be handled by OrderManagement component
-      // No need to call API directly
-    }, []),
     toggleOrderStatus,
   }
 }

@@ -1,13 +1,13 @@
 "use client"
 
-import { memo, useState } from "react"
+import { memo } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Clock, CheckCircle, Circle } from "lucide-react"
 import { Separator } from "@/components/ui/separator"
 import { Order, Topping } from "@/types/shop"
-import { InvoicePopup } from "./InvoicePopup"
+import { PDFService } from "@/services/pdfService"
 
 interface Props {
   orders: Order[]
@@ -15,21 +15,15 @@ interface Props {
   formatDateTime: (d: Date) => string
   onToggleStatus: (o: Order) => void
   onBackToOrder: () => void
-  onPrintBill: (o: Order) => void
 }
 
 function OrderManagementBase({ orders, formatPrice, formatDateTime, onToggleStatus, onBackToOrder }: Props) {
-  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
-  const [isInvoiceOpen, setIsInvoiceOpen] = useState(false)
-
   const handlePrintBill = (order: Order) => {
-    setSelectedOrder(order)
-    setIsInvoiceOpen(true)
-  }
-
-  const handleCloseInvoice = () => {
-    setIsInvoiceOpen(false)
-    setSelectedOrder(null)
+    const pdfService = new PDFService({
+      formatPrice,
+      formatDateTime
+    })
+    pdfService.generateInvoice(order)
   }
 
   if (!orders.length) {
@@ -106,15 +100,6 @@ function OrderManagementBase({ orders, formatPrice, formatDateTime, onToggleStat
           </CardContent>
         </Card>
       ))}
-      
-      {/* Invoice Popup */}
-      <InvoicePopup
-        isOpen={isInvoiceOpen}
-        onClose={handleCloseInvoice}
-        order={selectedOrder}
-        formatPrice={formatPrice}
-        formatDateTime={formatDateTime}
-      />
     </div>
   )
 }
