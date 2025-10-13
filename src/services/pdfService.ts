@@ -419,25 +419,42 @@ export class PDFService {
 
     // Xuất
     const blob = doc.output('blob')
-    const blobUrl = URL.createObjectURL(blob)
-    
-    const iframe = document.createElement('iframe')
-    iframe.style.position = 'fixed'
-    iframe.style.width = '0'
-    iframe.style.height = '0'
-    iframe.style.border = 'none'
-    iframe.style.pointerEvents = 'none'
-    iframe.src = blobUrl
-    document.body.appendChild(iframe)
-    
-    iframe.onload = () => {
-      // Mobile cần user-gesture: gọi từ sự kiện click
-      
-      iframe.contentWindow?.focus()
-      iframe.contentWindow?.print()
-      URL.revokeObjectURL(blobUrl)
-      console.log(1111111);
-      // document.body.removeChild(iframe)
-    }
+const fileName = `hoa-don-${order.id?.toString().slice(-6) ?? '------'}.pdf`
+const file = new File([blob], fileName, { type: 'application/pdf' })
+
+try {
+  // ✅ Ưu tiên: Web Share API (Level 2) — mở Share Sheet
+  // Yêu cầu: HTTPS + user-gesture (gọi trực tiếp trong onClick)
+  if (navigator.canShare?.({ files: [file] })) {
+    await navigator.share({
+      files: [file],
+      title: 'Hóa đơn',
+      text: `Hóa đơn #${order.id?.toString().slice(-6) ?? ''}`,
+    })
+    return
+  }
+} catch (err) {
+  // Nếu user hủy Share Sheet hoặc lỗi, sẽ rơi xuống fallback
+  console.warn('Share failed or cancelled:', err)
+}
+
+// 2) Fallback: in trực tiếp bằng iframe ẩn (không mở preview/tab)
+const blobUrl = URL.createObjectURL(blob)
+const iframe = document.createElement('iframe')
+iframe.style.position = 'fixed'
+iframe.style.width = '0'
+iframe.style.height = '0'
+iframe.style.border = 'none'
+iframe.style.pointerEvents = 'none'
+iframe.src = blobUrl
+document.body.appendChild(iframe)
+iframe.onload = () => {
+  // Nhớ gọi từ handler click để giữ user-gesture
+  iframe.contentWindow?.focus()
+  iframe.contentWindow?.print()
+  // Dọn dẹp
+  URL.revokeObjectURL(blobUrl)
+  // document.body.removeChild(iframe)
+}
   }
 }
