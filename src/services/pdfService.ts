@@ -149,7 +149,7 @@ export class PDFService {
     const store = {
       name:    this.config.store?.name    ?? 'Lá và Sương',
       slogan:  this.config.store?.slogan  ?? 'Cà phê - Trà sữa - Trà trái cây',
-      address: this.config.store?.address ?? '36/27B Đ. Số 4, Thủ Đức, Hồ Chí Minh',
+      address: this.config.store?.address ?? '36/27B Đ. Số 4, phường Hiệp Bình, Thủ Đức, Hồ Chí Minh',
       phone:   this.config.store?.phone   ?? 'ĐT: 0931 792 220',
     }
 
@@ -291,10 +291,10 @@ export class PDFService {
       },
       alternateRowStyles: { fillColor: WHITE }, // bỏ sọc xám
       columnStyles: {
-        0: { cellWidth: productW, halign: 'left',  overflow: 'linebreak' },
+        0: { cellWidth: productW + 5, halign: 'left',  overflow: 'linebreak' },
         1: { cellWidth: qtyW,    halign: 'center', overflow: 'ellipsize' },
-        2: { cellWidth: unitW,   halign: 'right',  overflow: 'ellipsize' },
-        3: { cellWidth: totalW,  halign: 'right',  overflow: 'ellipsize' },
+        2: { cellWidth: unitW - 5,   halign: 'right',  overflow: 'ellipsize' },
+        3: { cellWidth: totalW - 5,  halign: 'right',  overflow: 'ellipsize' },
       },
       rowPageBreak: 'auto',
       didDrawCell: (data: CellHookData) => {
