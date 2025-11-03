@@ -56,6 +56,7 @@ function CustomizationSheetBase({
   const [sizes, setSizes] = useState<SizeOption[]>([])
   const [productSizePrices, setProductSizePrices] = useState<ProductSizePrices[]>([])
   const [isLoadingLevels, setIsLoadingLevels] = useState(true)
+  const [selectedSize, setSelectedSize] = useState<string>('')
 
   // Fetch levels when component mounts
   useEffect(() => {
@@ -71,6 +72,13 @@ function CustomizationSheetBase({
         setSweetnessLevels(sweetnessData)
         setIceLevels(iceData)
         setSizes(sizesData)
+        if (sizesData.length > 0) {
+          if(productSizePricesData.find(val => val.product_id == milkTea?.id)){
+            const sizeValue = productSizePricesData.find(val => val.product_id == milkTea?.id)?.size_id.toString() as SizeValue
+            setSelectedSize(sizeValue || '')
+            onSizeChange(sizeValue)
+          }
+        }
         setProductSizePrices(productSizePricesData)
       } catch (error) {
         console.error('Error loading levels:', error)
@@ -191,14 +199,13 @@ function CustomizationSheetBase({
                 </div>
 
                 <Separator />
-
                 {/* Size */}
                 <div>
                   <Label className="text-sm font-semibold text-gray-700">Kích thước</Label>
                   {isLoadingLevels ? (
                     <div className="mt-2 p-2 text-sm text-gray-500">Đang tải...</div>
                   ) : (
-                    <RadioGroup value={sheetSize} onValueChange={(v) => onSizeChange(v as SizeValue)} className="mt-2">
+                    <RadioGroup value={sheetSize || selectedSize as string} onValueChange={(v) => onSizeChange(v as SizeValue)} className="mt-2">
                       {sizes.map((size) => {
                         const sizePriceData = productSizePrices.find(
                           p => p.product_id === milkTea.id && p.size_id === Number(size.value)

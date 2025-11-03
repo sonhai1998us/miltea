@@ -11,6 +11,11 @@ const outfit = Lemonada({
 export const metadata: Metadata = {
   title: 'Lá và Sương - Coffee & Milk Tea',
   description: 'Lá và Sương – Quán trà sữa & cà phê với phong cách tự nhiên hiện đại, nổi bật cùng hình ảnh chú cáo và lá cây dễ thương. Thưởng thức trà sữa đậm vị, trái cây tươi và cà phê nguyên chất, gần gũi tại Việt Nam.',
+  icons: {
+    icon: [
+      { url: '/logo2.ico', sizes: 'any' }, // ICO có thể chứa nhiều size
+    ],
+  },
   openGraph: {
     title: "Lá và Sương – Trà sữa & Cà phê phong cách tự nhiên hiện đại",
     description: "Khám phá hương vị đặc biệt tại Lá và Sương – nơi hội tụ trà sữa đậm đà, cà phê nguyên chất và không gian độc đáo cùng hình ảnh chú cáo và lá cây dễ thương.",

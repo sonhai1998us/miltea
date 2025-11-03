@@ -14,7 +14,7 @@ export const useShopState = () => {
   // Sheet customization state
   const [sheetSweetness, setSheetSweetness] = useState<SweetValue>("4")
   const [sheetIce, setSheetIce] = useState<IceValue>("3")
-  const [sheetSize, setSheetSize] = useState<SizeValue>("1")
+  const [sheetSize, setSheetSize] = useState<SizeValue>("")
   const [sheetNote, setSheetNote] = useState<string>("")
   const [sheetToppings, setSheetToppings] = useState<Topping[]>([])
   
@@ -44,7 +44,7 @@ export const useShopState = () => {
   const resetSheetState = useCallback(() => {
     setSheetSweetness("4")
     setSheetIce("3")
-    setSheetSize("1")
+    setSheetSize('')
     setSheetNote("")
     setSheetToppings([])
     setSelectedMilkTea(null)

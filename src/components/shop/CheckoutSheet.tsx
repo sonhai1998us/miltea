@@ -135,15 +135,16 @@ function CheckoutSheetBase({
                   </p>
                 </div>
                 <div className="flex justify-center">
-                  <div className="w-48 h-48 bg-white border-2 border-gray-200 rounded-lg flex items-center justify-center">
+                  <div className="bg-white rounded-lg flex items-center justify-center">
                     <div className="text-center">
-                      <div className="w-40 h-40 bg-gray-100 rounded-lg flex items-center justify-center mb-2">
-                        <Image alt="" src={`https://img.vietqr.io/image/VCB-9931782220-qr_only.png?amount=${total}`} width={600} height={776} />
+                      <div className="bg-gray-100 rounded-lg flex items-center justify-center mb-2">
+                        <Image alt="" src={`/images/qr.jpg`} width={600} height={776} />
+                        {/* https://img.vietqr.io/image/VCB-9931782220-qr_only.png?amount=${total} */}
                       </div>
                     </div>
                   </div>
                 </div>
-                <div className="bg-blue-50 p-4 rounded-lg text-left">
+                {/* <div className="bg-blue-50 p-4 rounded-lg text-left">
                   <h4 className="font-semibold text-blue-800 mb-2">Thông tin chuyển khoản:</h4>
                   <div className="text-sm space-y-1">
                     <p><span className="font-medium">Ngân hàng:</span> Vietcombank</p>
@@ -151,7 +152,7 @@ function CheckoutSheetBase({
                     <p><span className="font-medium">Chủ tài khoản:</span> Lá và Sương</p>
                     <p><span className="font-medium">Số tiền:</span> <span className="font-bold text-green-600">{formatPrice(total)}</span></p>
                   </div>
-                </div>
+                </div> */}
                 <div className="text-sm text-gray-500">
                   <p>Sau khi chuyển khoản thành công,</p>
                   <p>vui lòng nhấn Xác nhận hoàn tất bên dưới</p>
