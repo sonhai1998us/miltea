@@ -1,15 +1,18 @@
 import MilkTeaList from "@/components/MilkTeaList"
+import ToppingList from "@/components/ToppingList"
 import { OrderManagement } from "./OrderManagement"
 import { formatPrice, formatDateTime, getQuantity, sortOrders } from "@/utils/shopUtils"
-import { MilkTea, Order } from "@/types/shop"
+import { MilkTea, Order, Topping } from "@/types/shop"
 
 interface ShopContentProps {
   activeTab: "order" | "manage"
   milkTeas: MilkTea[]
   isLoadingMilkTeas: boolean
+  toppings: Topping[]
   orders: Order[]
   quantities: Record<number, number>
   onAddToCart: (milkTea: MilkTea) => void
+  onSelectTopping: (topping: Topping) => void
   onToggleOrderStatus: (order: Order) => void
   onBackToOrder: () => void
   onQuantityChange: (id: number, newQuantity: number) => void
@@ -19,9 +22,11 @@ export const ShopContent = ({
   activeTab,
   milkTeas,
   isLoadingMilkTeas,
+  toppings,
   orders,
   quantities,
   onAddToCart,
+  onSelectTopping,
   onToggleOrderStatus,
   onBackToOrder,
   onQuantityChange,
@@ -38,14 +43,23 @@ export const ShopContent = ({
   return (
     <>
       {activeTab === "order" ? (
-        <MilkTeaList
-          milkTeas={milkTeas}
-          isLoading={isLoadingMilkTeas}
-          getQuantity={getQuantityForId}
-          updateQuantity={updateQuantityForId}
-          handleAddToCart={onAddToCart}
-          formatPrice={formatPrice}
-        />
+        <>
+          <MilkTeaList
+            milkTeas={milkTeas}
+            isLoading={isLoadingMilkTeas}
+            getQuantity={getQuantityForId}
+            updateQuantity={updateQuantityForId}
+            handleAddToCart={onAddToCart}
+            formatPrice={formatPrice}
+          />
+          <ToppingList
+            toppings={toppings}
+            formatPrice={formatPrice}
+            getQuantity={getQuantityForId}
+            updateQuantity={updateQuantityForId}
+            handleSelectTopping={onSelectTopping}
+          />
+        </>
       ) : (
         <OrderManagement
           orders={sortedOrders}

@@ -80,6 +80,7 @@ export const useShopActions = (
       ice_id: sheetIce,
       size_id: sheetSize,
       notes: sheetNote,
+      item_type: "PRODUCT"
     }
 
     const success = await ShopService.addToCart(cartData)
@@ -93,7 +94,7 @@ export const useShopActions = (
         const cartItemId = refreshedCart[0]?.id
         if (cartItemId) {
           for (const topping of sheetToppings) {
-            await ShopService.addToppingToCartItem(cartItemId, topping.id)
+            await ShopService.addToppingToCartItem(cartItemId, topping.id, quantity)
           }
           // Refresh cart again after adding toppings
           const finalCart = await ShopService.fetchCartItems()
@@ -170,12 +171,14 @@ export const useShopActions = (
         await ShopService.addOrderItem({
           order_id: newOrder.id,
           product_id: Number(item.product_id),
-          size_id: item.size_id.toString(),
-          sweetness_id: item.sweetness_id.toString(),
-          ice_id: item.ice_id.toString(),
+          size_id: item.size_id?.toString() || '',
+          sweetness_id: item.sweetness_id?.toString() || '',
+          ice_id: item.ice_id?.toString() || '',
           quantity: item.quantity,
-          unit_price: item.product_price,
+          unit_price: (item.product_price || item.topping_price),
           notes: item.notes,
+          item_type: item.item_type,
+          topping_id: item.topping_id,
           toppings: item?.toppings ?? []
         })
       }
@@ -211,6 +214,35 @@ export const useShopActions = (
     setActiveSheet,
     resetCheckoutState
   ])
+  // Handle select topping
+  const handleSelectTopping = useCallback(async (topping: Topping) => {
+    const quantity = quantities[topping.id] || 1
+    if (quantity === 0) return
+
+    try {
+      // Add topping as a separate cart item with item_type = "TOPPING"
+      const success = await ShopService.addToppingToCart({
+        topping_id: topping.id,
+        quantity: quantity,
+        notes: ""
+      })
+
+      if (success) {
+        // Refresh cart
+        const refreshedCart = await ShopService.fetchCartItems()
+        setCart(refreshedCart)
+        
+        // Reset quantity
+        setQuantities(prev => ({ ...prev, [topping.id]: 0 }))
+      } else {
+        alert('Có lỗi xảy ra khi thêm topping vào giỏ hàng')
+      }
+    } catch (error) {
+      console.error('Error adding topping to cart:', error)
+      alert('Có lỗi xảy ra khi thêm topping vào giỏ hàng')
+    }
+  }, [quantities, setCart, setQuantities])
+
   // Toggle order status
   const toggleOrderStatus = useCallback(async (order: Order) => {
     // Optimistic update
@@ -242,5 +274,6 @@ export const useShopActions = (
     handlePaymentMethodNext,
     handleCompleteOrder,
     toggleOrderStatus,
+    handleSelectTopping,
   }
 }

@@ -95,7 +95,7 @@ export default function MilkTeaList({
   }
 
   return (
-    <div className="p-4 max-w-md mx-auto pb-24">
+    <div className="p-4 max-w-md mx-auto pb-12">
       <SearchBar onSearch={handleSearch} />
       
       {filteredMilkTeas.length === 0 && searchQuery && (

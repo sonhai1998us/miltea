@@ -38,6 +38,10 @@ export interface CartItem {
   ice_id: string
   unit_price: number
   status: boolean
+  item_type: "PRODUCT" | "TOPPING"
+  topping_id: number
+  topping_name: string
+  topping_price: number
 }
 
 export interface Order {

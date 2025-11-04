@@ -59,19 +59,20 @@ function CartSheetBase({ open, cart, formatPrice, total, onClose, onRemove, onCh
               <div className="p-4 space-y-4">
                 {cart.map((item) => {
                   const toppingsPrice = item.toppings ? item.toppings.reduce((sum, topping) => sum + topping.price, 0) * item.quantity : 0
-                  const itemTotal = (item.product_price * item.quantity) + toppingsPrice + (item?.size_price ?? 0 *item.quantity)
+                  const itemTotal = ((item.product_price || item.topping_price) * item.quantity) + toppingsPrice + (item?.size_price ?? 0 *item.quantity)
                   
                   return (
                     <Card key={item.id} className="border-green-200">
                       <CardContent className="p-4">
                         <div className="flex justify-between items-center mb-2">
-                          <h4 className="font-semibold text-base">{item.product_name}</h4>
+                          <h4 className="font-semibold text-base">{item.product_name || item.topping_name}</h4>
                           <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-red-500 hover:bg-red-50" onClick={() => onRemove(item.id)}>
                             X
                           </Button>
                         </div>
                         <div className="text-sm text-gray-600 space-y-1 mb-3">
                           <p>Số lượng: {item.quantity}</p>
+                          {item.product_name && <>
                           <p>Độ ngọt: {item.sweetness_name}</p>
                           <p>Lượng đá: {item.ice_name}</p>
                           {item.toppings?.length ? (
@@ -89,12 +90,13 @@ function CartSheetBase({ open, cart, formatPrice, total, onClose, onRemove, onCh
                           ) : (
                             <p>Topping: Không thêm Topping</p>
                           )}
+                          </>}
                           {item.notes && <p className="text-green-600 font-medium">Ghi chú: {item.notes}</p>}
                         </div>
                         <div className="border-t pt-2">
                           <div className="flex justify-between text-sm mb-1">
                             <span>Giá sản phẩm:</span>
-                            <span>{formatPrice(item.product_price * item.quantity)}</span>
+                            <span>{formatPrice((item.product_price || item.topping_price) * item.quantity)}</span>
                           </div>
                           {toppingsPrice > 0 && (
                             <div className="flex justify-between text-sm mb-1">
@@ -108,10 +110,10 @@ function CartSheetBase({ open, cart, formatPrice, total, onClose, onRemove, onCh
                               <span>+{formatPrice(item.quantity * item.size_price)}</span>
                             </div>
                           )}
-                          <div className="flex justify-between font-bold text-lg text-green-600 border-t pt-1">
+                          {<div className="flex justify-between font-bold text-lg text-green-600 border-t pt-1">
                             <span>Tổng:</span>
                             <span>{formatPrice(itemTotal)}</span>
-                          </div>
+                          </div>}
                         </div>
                       </CardContent>
                     </Card>

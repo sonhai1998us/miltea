@@ -65,15 +65,17 @@ function OrderManagementBase({ orders, formatPrice, formatDateTime, onToggleStat
               {order.items.map((item) => (
                 <div key={item.id} className="text-sm">
                   <div className="flex justify-between">
-                    <span className="font-medium">{item.product_name} x{item.quantity}</span>
+                    <span className="font-medium">{item.product_name || item.topping_name} x{item.quantity}</span>
                     <span className="text-green-600">{formatPrice((item.unit_price + (item.toppings.reduce((s, t) => s + t.price, 0)) ) * item.quantity)}</span>
                   </div>
                   <div className="text-xs text-gray-500 ml-2">
+                    {item.product_name && <>
                     <div>•{item.sweetness_name}</div> 
                     <div>• {item.ice_name}</div>
-                    <div>{item.toppings.length > 0 && ` • ${item.toppings.map((t: Topping) => t.name).join(", ")}`}</div>
-                    <div>{item.size_name && <div className="text-green-600 mt-1 flex justify-between"><div>Size: {item.size_name}</div> <div>{formatPrice(item.size_price)}</div> </div>}</div>
-                    <div>{item.notes && <div className="text-green-600 mt-1">Ghi chú: {item.notes}</div>}</div>
+                      <div>{item.toppings.length > 0 && ` • ${item.toppings.map((t: Topping) => t.name).join(", ")}`}</div>
+                      <div>{item.size_name && <div className="text-green-600 mt-1 flex justify-between"><div>Size: {item.size_name}</div> <div>{formatPrice(item.size_price)}</div> </div>}</div>
+                      <div>{item.notes && <div className="text-green-600 mt-1">Ghi chú: {item.notes}</div>}</div>
+                    </>}
                   </div>
                 </div>
               ))}

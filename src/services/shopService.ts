@@ -20,7 +20,7 @@ export class ShopService {
   // Fetch toppings
   static async fetchToppings(): Promise<Topping[]> {
     try {
-      const response = await fetchApi(this.getApiUrl('toppings?fqnull=deleted_at&fq=is_active:1'))
+      const response = await fetchApi(this.getApiUrl('toppings?fqnull=deleted_at&fq=is_active:1,sellable:1'))
       return response?.status === 'success' && response?.data ? response.data as Topping[] : []
     } catch (error) {
       console.error('Error fetching toppings:', error)
@@ -50,7 +50,7 @@ export class ShopService {
     }
   }
 
-  // Add item to cart
+  // Add item to cart (product)
   static async addToCart(cartData: {
     product_id: number
     quantity: number
@@ -58,9 +58,14 @@ export class ShopService {
     ice_id: string
     size_id: string
     notes: string
+    item_type?: string
   }): Promise<boolean> {
     try {
-      const response = await postApi(this.getApiUrl('cart_items'), cartData)
+      const cartPayload = {
+        ...cartData,
+        item_type: cartData.item_type || "PRODUCT"
+      }
+      const response = await postApi(this.getApiUrl('cart_items'), cartPayload)
       return response?.status === 'success'
     } catch (error) {
       console.error('Error adding to cart:', error)
@@ -68,12 +73,37 @@ export class ShopService {
     }
   }
 
+  // Add topping to cart as a separate item
+  static async addToppingToCart(cartData: {
+    topping_id: number
+    quantity: number
+    notes?: string
+  }): Promise<boolean> {
+    try {
+      const cartPayload = {
+        topping_id: cartData.topping_id,
+        quantity: cartData.quantity,
+        item_type: "TOPPING",
+        size_id: null,
+        sweetness_id: null,
+        ice_id: null,
+        notes: cartData.notes || ""
+      }
+      const response = await postApi(this.getApiUrl('cart_items'), cartPayload)
+      return response?.status === 'success'
+    } catch (error) {
+      console.error('Error adding topping to cart:', error)
+      return false
+    }
+  }
+
   // Add topping to cart item
-  static async addToppingToCartItem(cartItemId: number, toppingId: number): Promise<boolean> {
+  static async addToppingToCartItem(cartItemId: number, toppingId: number, quantity: number): Promise<boolean> {
     try {
       const response = await postApi(this.getApiUrl('cart_item_toppings'), {
         cart_item_id: cartItemId,
-        topping_id: toppingId
+        topping_id: toppingId,
+        quantity
       })
       return response?.status === 'success'
     } catch (error) {
@@ -124,6 +154,8 @@ export class ShopService {
     quantity: number
     unit_price: number
     notes: string
+    item_type: "PRODUCT" | "TOPPING"
+    topping_id: number
     toppings: Topping[]
   }): Promise<boolean> {
     try {

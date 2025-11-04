@@ -32,7 +32,7 @@ export const calculateTotalCartPrice = (
   discountLocked: boolean = false
 ): number => {
   const subtotal = cart.reduce((sum, item) => {
-    const basePrice = item.product_price * item.quantity
+    const basePrice = (item.product_price || item.topping_price) * item.quantity
     const toppingsPrice = item.toppings 
       ? item.toppings.reduce((toppingSum, topping) => toppingSum + topping.price, 0) * item.quantity 
       : 0
