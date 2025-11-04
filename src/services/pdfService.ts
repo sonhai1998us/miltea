@@ -216,7 +216,7 @@ export class PDFService {
 
     const rows: RowInput[] = []
     ;(order.items || []).forEach((item) => {
-      const name = this.softWrap(item.product_name ?? '')
+      const name = this.softWrap(item.product_name ?? item.topping_name ?? '')
 
       const detailLines: string[] = []
       if (item.size_name) detailLines.push(this.softWrap(`Size: ${item.size_name}${item.size_price>0?` (+${this.config.formatPrice(item.size_price)})`:''}`))
@@ -226,7 +226,7 @@ export class PDFService {
         detailLines.push(this.softWrap(item.toppings.map((t:Topping)=>`${t.name}${t.price>0?` (+${this.config.formatPrice(t.price)})`:''}`).join(', ')))
       if (item.notes) detailLines.push(this.softWrap(`Ghi chú: ${item.notes}`))
 
-      const unitPrice = item.product_price ?? 0
+      const unitPrice = item.product_price ?? item.topping_price ?? 0
       const sizePrice = item.size_price ?? 0
       const toppingsPrice = (item.toppings || []).reduce((s, t) => s + (t.price || 0), 0)
       const totalUnitPrice = unitPrice + sizePrice + toppingsPrice
