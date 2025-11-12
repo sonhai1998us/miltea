@@ -49,7 +49,7 @@ export const sortOrders = (orders: Order[]): Order[] => {
   const copy = [...orders]
   copy.sort((a, b) => {
     if (a.is_completed === b.is_completed) {
-      return new Date(a.order_time).getTime() - new Date(b.order_time).getTime()
+      return new Date(b.order_time).getTime() - new Date(a.order_time).getTime()
     }
     return a.is_completed ? 1 : -1
   })
