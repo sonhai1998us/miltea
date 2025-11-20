@@ -41,7 +41,7 @@ export const useShopActions = (
   const fetchInitialData = useCallback(async () => {
     try {
       setIsLoadingMilkTeas(true)
-      
+
       // Fetch all data in parallel
       const [milkTeas, toppings, cartItems, orders] = await Promise.all([
         ShopService.fetchMilkTeas(),
@@ -113,21 +113,21 @@ export const useShopActions = (
 
   // Toggle topping selection
   const toggleTopping = useCallback((topping: Topping) => {
-    state.setSheetToppings((prev) => 
-      prev.some((x) => x.id === topping.id) 
-        ? prev.filter((x) => x.id !== topping.id) 
+    state.setSheetToppings((prev) =>
+      prev.some((x) => x.id === topping.id)
+        ? prev.filter((x) => x.id !== topping.id)
         : [...prev, topping]
     )
   }, [state.setSheetToppings])
 
   // Remove from cart
   const removeFromCart = useCallback(async (itemId: number) => {
-    try{
+    try {
       await ShopService.removeFromCart(itemId)
-        const refreshedCart = await ShopService.fetchCartItems();
-        setCart(refreshedCart)
-    }catch(e){
-      console.log('Error removing from cart',e)
+      const refreshedCart = await ShopService.fetchCartItems();
+      setCart(refreshedCart)
+    } catch (e) {
+      console.log('Error removing from cart', e)
     }
   }, [setCart])
 
@@ -202,11 +202,11 @@ export const useShopActions = (
       console.log('Error creating order')
     }
   }, [
-    paymentMethod, 
-    cashAmount, 
-    getTotalCartPrice, 
-    cart, 
-    discountAmount, 
+    paymentMethod,
+    cashAmount,
+    getTotalCartPrice,
+    cart,
+    discountAmount,
     discountLocked,
     setCashError,
     setOrders,
@@ -231,7 +231,7 @@ export const useShopActions = (
         // Refresh cart
         const refreshedCart = await ShopService.fetchCartItems()
         setCart(refreshedCart)
-        
+
         // Reset quantity
         setQuantities(prev => ({ ...prev, [topping.id]: 0 }))
       } else {
@@ -246,8 +246,8 @@ export const useShopActions = (
   // Toggle order status
   const toggleOrderStatus = useCallback(async (order: Order) => {
     // Optimistic update
-    setOrders((prev) => 
-      prev.map((o) => 
+    setOrders((prev) =>
+      prev.map((o) =>
         o.id === order.id ? { ...o, is_completed: !o.is_completed } : o
       )
     )
@@ -255,12 +255,22 @@ export const useShopActions = (
     const success = await ShopService.updateOrderStatus(order.id, !order.is_completed)
     if (!success) {
       // Revert on error
-      setOrders((prev) => 
-        prev.map((o) => 
+      setOrders((prev) =>
+        prev.map((o) =>
           o.id === order.id ? { ...o, is_completed: order.is_completed } : o
         )
       )
     }
+  }, [setOrders])
+
+  // Delete order
+  const handleDeleteOrder = useCallback(async (order: Order) => {
+    if (!confirm('Bạn có chắc muốn xóa đơn hàng này?')) return
+
+    setOrders((prev) => prev.filter((o) => o.id !== order.id))
+
+    const refreshedOrders = await ShopService.fetchOrders()
+    setOrders(refreshedOrders)
   }, [setOrders])
 
   return {
@@ -275,5 +285,6 @@ export const useShopActions = (
     handleCompleteOrder,
     toggleOrderStatus,
     handleSelectTopping,
+    handleDeleteOrder,
   }
 }

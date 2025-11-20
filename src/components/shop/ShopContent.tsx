@@ -14,6 +14,7 @@ interface ShopContentProps {
   onAddToCart: (milkTea: MilkTea) => void
   onSelectTopping: (topping: Topping) => void
   onToggleOrderStatus: (order: Order) => void
+  onDeleteOrder: (order: Order) => void
   onBackToOrder: () => void
   onQuantityChange: (id: number, newQuantity: number) => void
 }
@@ -28,6 +29,7 @@ export const ShopContent = ({
   onAddToCart,
   onSelectTopping,
   onToggleOrderStatus,
+  onDeleteOrder,
   onBackToOrder,
   onQuantityChange,
 }: ShopContentProps) => {
@@ -67,6 +69,7 @@ export const ShopContent = ({
           formatDateTime={formatDateTime}
           onToggleStatus={onToggleOrderStatus}
           onBackToOrder={onBackToOrder}
+          onDeleteOrder={onDeleteOrder}
         />
       )}
     </>

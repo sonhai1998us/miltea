@@ -25,10 +25,10 @@ export default function FoxMilkTeaShop() {
   const pendingOrdersCount = useMemo(() => state.orders.filter((o) => !o.is_completed).length, [state.orders])
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-50">
-      <HeaderBar 
-        activeTab={state.activeTab} 
-        cartCount={state.cart.length} 
-        onOpenCart={() => state.setActiveSheet('cart')} 
+      <HeaderBar
+        activeTab={state.activeTab}
+        cartCount={state.cart.length}
+        onOpenCart={() => state.setActiveSheet('cart')}
       />
 
       <ShopContent
@@ -41,6 +41,7 @@ export default function FoxMilkTeaShop() {
         onAddToCart={actions.handleAddToCart}
         onSelectTopping={actions.handleSelectTopping}
         onToggleOrderStatus={actions.toggleOrderStatus}
+        onDeleteOrder={actions.handleDeleteOrder}
         onBackToOrder={() => state.setActiveTab("order")}
         onQuantityChange={(id: number, newQuantity: number) => {
           state.setQuantities(updateQuantity(state.quantities, id, newQuantity))
@@ -89,13 +90,13 @@ export default function FoxMilkTeaShop() {
         onCashChange={state.setCashAmount}
         onChangeDiscount={(n: number) => state.setDiscountAmount(n)}
         onApplyDiscount={() => state.setDiscountLocked(true)}
-        onClearDiscount={() => { 
-          state.setDiscountAmount(0); 
-          state.setDiscountLocked(false) 
+        onClearDiscount={() => {
+          state.setDiscountAmount(0);
+          state.setDiscountLocked(false)
         }}
-        onBackToCart={() => { 
-          state.setActiveSheet('cart'); 
-          state.setCashAmount(0) 
+        onBackToCart={() => {
+          state.setActiveSheet('cart');
+          state.setCashAmount(0)
         }}
       />
     </div>

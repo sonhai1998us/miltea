@@ -4,7 +4,7 @@ import { memo } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Clock, CheckCircle, Circle } from "lucide-react"
+import { Clock, CheckCircle, Circle, Trash2 } from "lucide-react"
 import { Separator } from "@/components/ui/separator"
 import { Order, Topping } from "@/types/shop"
 import { PDFService } from "@/services/pdfService"
@@ -14,10 +14,11 @@ interface Props {
   formatPrice: (n: number) => string
   formatDateTime: (d: Date) => string
   onToggleStatus: (o: Order) => void
+  onDeleteOrder: (o: Order) => void
   onBackToOrder: () => void
 }
 
-function OrderManagementBase({ orders, formatPrice, formatDateTime, onToggleStatus, onBackToOrder }: Props) {
+function OrderManagementBase({ orders, formatPrice, formatDateTime, onToggleStatus, onDeleteOrder, onBackToOrder }: Props) {
   const handlePrintBill = (order: Order) => {
     const pdfService = new PDFService({
       formatPrice,
@@ -56,9 +57,14 @@ function OrderManagementBase({ orders, formatPrice, formatDateTime, onToggleStat
                 </div>
                 <p className="text-sm text-gray-600 mt-1">Thanh toán: {order.payment_method_id === 1 ? "Tiền mặt" : "Chuyển khoản"}</p>
               </div>
-              <Button variant="ghost" size="sm" onClick={() => onToggleStatus(order)} className="h-8 w-8 p-0 text-green-600 hover:bg-green-100">
-                {order.is_completed ? <CheckCircle className="w-5 h-5" /> : <Circle className="w-5 h-5" />}
-              </Button>
+              <div className="flex gap-1">
+                <Button variant="ghost" size="sm" onClick={() => onToggleStatus(order)} className="h-8 w-8 p-0 text-green-600 hover:bg-green-100">
+                  {order.is_completed ? <CheckCircle className="w-5 h-5" /> : <Circle className="w-5 h-5" />}
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => onDeleteOrder(order)} className="h-8 w-8 p-0 text-red-600 hover:bg-red-100">
+                  <Trash2 className="w-5 h-5" />
+                </Button>
+              </div>
             </div>
 
             <div className="space-y-2 mb-3">
@@ -66,12 +72,12 @@ function OrderManagementBase({ orders, formatPrice, formatDateTime, onToggleStat
                 <div key={item.id} className="text-sm">
                   <div className="flex justify-between">
                     <span className="font-medium">{item.product_name || item.topping_name} x{item.quantity}</span>
-                    <span className="text-green-600">{formatPrice((item.unit_price + (item.toppings.reduce((s, t) => s + t.price, 0)) ) * item.quantity)}</span>
+                    <span className="text-green-600">{formatPrice((item.unit_price + (item.toppings.reduce((s, t) => s + t.price, 0))) * item.quantity)}</span>
                   </div>
                   <div className="text-xs text-gray-500 ml-2">
                     {item.product_name && <>
-                    <div>•{item.sweetness_name}</div> 
-                    <div>• {item.ice_name}</div>
+                      <div>•{item.sweetness_name}</div>
+                      <div>• {item.ice_name}</div>
                       <div>{item.toppings.length > 0 && ` • ${item.toppings.map((t: Topping) => t.name).join(", ")}`}</div>
                       <div>{item.size_name && <div className="text-green-600 mt-1 flex justify-between"><div>Size: {item.size_name}</div> <div>{formatPrice(item.size_price)}</div> </div>}</div>
                       <div>{item.notes && <div className="text-green-600 mt-1">Ghi chú: {item.notes}</div>}</div>
@@ -82,11 +88,11 @@ function OrderManagementBase({ orders, formatPrice, formatDateTime, onToggleStat
             </div>
 
             <Separator className="my-3" />
-            {order.discount_amount > 0 && 
-            <div className="flex justify-between items-center">
-              <span className="font-bold text-lg">Giảm giá:</span>
-              <span className="font-bold text-xl text-red-600">{formatPrice(order.discount_amount)}</span>
-            </div>}
+            {order.discount_amount > 0 &&
+              <div className="flex justify-between items-center">
+                <span className="font-bold text-lg">Giảm giá:</span>
+                <span className="font-bold text-xl text-red-600">{formatPrice(order.discount_amount)}</span>
+              </div>}
             <div className="flex justify-between items-center">
               <span className="font-bold text-lg">Tổng cộng:</span>
               <span className="font-bold text-xl text-green-600">{formatPrice(order.total_amount)}</span>

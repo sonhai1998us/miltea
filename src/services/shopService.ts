@@ -133,7 +133,7 @@ export class ShopService {
   }): Promise<Order | null> {
     try {
       const response = await postApi(this.getApiUrl('orders'), orderData)
-      if(response?.status === 'success'){
+      if (response?.status === 'success') {
         const _fetchOrdersNewest = await fetchApi(this.getApiUrl('orders')).then(resp => (resp?.data as Order[])[0])
         return _fetchOrdersNewest
       }
@@ -178,6 +178,17 @@ export class ShopService {
     }
   }
 
+  // Delete order
+  static async deleteOrder(orderId: number): Promise<boolean> {
+    try {
+      const response = await deleteApi(this.getApiUrl(`orders/${orderId}`))
+      return response?.status === 'success'
+    } catch (error) {
+      console.error('Error deleting order:', error)
+      return false
+    }
+  }
+
   // Clear cart (remove all items)
   static async clearCart(cartItems: CartItem[]): Promise<boolean> {
     try {
@@ -189,7 +200,7 @@ export class ShopService {
       return false
     }
   }
-  static async printBill(order: Order): Promise<boolean>{ 
+  static async printBill(order: Order): Promise<boolean> {
     try {
       await postApi(this.getApiUrl('print-bill'), order)
       return true
