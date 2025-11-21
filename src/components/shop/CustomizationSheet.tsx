@@ -10,7 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Separator } from "@/components/ui/separator"
 
 import { MilkTea, Topping, SweetValue, IceValue, SizeValue, SweetnessLevelOption, IceLevelOption, SizeOption, fetchSweetnessLevels, fetchIceLevels, fetchSizes } from "@/types/shop"
-import { ProductSizePrices, fetchProductSizePrices }  from "@/types/option";
+import { ProductSizePrices, fetchProductSizePrices } from "@/types/option";
 
 interface Props {
   open: boolean
@@ -30,6 +30,7 @@ interface Props {
   onNoteChange: (v: string) => void
   onToggleTopping: (t: Topping) => void
   onConfirm: (id: number) => void
+  isLoading?: boolean
 }
 
 function CustomizationSheetBase({
@@ -50,6 +51,7 @@ function CustomizationSheetBase({
   onNoteChange,
   onToggleTopping,
   onConfirm,
+  isLoading = false,
 }: Props) {
   const [sweetnessLevels, setSweetnessLevels] = useState<SweetnessLevelOption[]>([])
   const [iceLevels, setIceLevels] = useState<IceLevelOption[]>([])
@@ -73,7 +75,7 @@ function CustomizationSheetBase({
         setIceLevels(iceData)
         setSizes(sizesData)
         if (sizesData.length > 0) {
-          if(productSizePricesData.find(val => val.product_id == milkTea?.id)){
+          if (productSizePricesData.find(val => val.product_id == milkTea?.id)) {
             const sizeValue = productSizePricesData.find(val => val.product_id == milkTea?.id)?.size_id.toString() as SizeValue
             setSelectedSize(sizeValue || '')
             onSizeChange(sizeValue)
@@ -93,7 +95,7 @@ function CustomizationSheetBase({
   }, [open])
 
   const toppingsSum = useMemo(() => sheetToppings.reduce((s, t) => s + t.price, 0), [sheetToppings])
-  
+
   const sizePrice = useMemo(() => {
     if (!milkTea) return 0
     const sizePriceData = productSizePrices.find(
@@ -212,14 +214,14 @@ function CustomizationSheetBase({
                         )
                         return (
                           sizePriceData && (
-                          <div key={size.value} className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-50">
-                            <RadioGroupItem value={size.value} id={`size-${size.value}`} />
-                            <Label htmlFor={`size-${size.value}`} className="flex-1 text-sm cursor-pointer flex justify-between">
-                              <span>{size.label}</span>
-                              
+                            <div key={size.value} className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-50">
+                              <RadioGroupItem value={size.value} id={`size-${size.value}`} />
+                              <Label htmlFor={`size-${size.value}`} className="flex-1 text-sm cursor-pointer flex justify-between">
+                                <span>{size.label}</span>
+
                                 <span className="text-green-600 font-medium">+{formatPrice(sizePriceData.price)}</span>
-                            </Label>
-                          </div>)
+                              </Label>
+                            </div>)
                         )
                       })}
                     </RadioGroup>
@@ -273,9 +275,10 @@ function CustomizationSheetBase({
 
                 <Button
                   onClick={() => milkTea && onConfirm(milkTea.id)}
-                  className="w-full mt-4 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 h-12 text-base font-semibold"
+                  disabled={isLoading}
+                  className="w-full mt-4 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 h-12 text-base font-semibold disabled:opacity-70"
                 >
-                  Thêm vào giỏ hàng
+                  {isLoading ? "Đang thêm..." : "Thêm vào giỏ hàng"}
                 </Button>
               </div>
             </div>

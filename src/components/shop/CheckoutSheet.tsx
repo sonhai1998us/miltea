@@ -23,6 +23,7 @@ interface Props {
   onPaymentChange: (v: "cash" | "transfer") => void
   onCashChange: (v: number) => void
   formatInputNumber: (s: string) => string
+  isLoading?: boolean
 }
 
 function CheckoutSheetBase({
@@ -39,6 +40,7 @@ function CheckoutSheetBase({
   onPaymentChange,
   onCashChange,
   formatInputNumber,
+  isLoading = false,
 }: Props) {
   if (!open) return null
 
@@ -177,9 +179,10 @@ function CheckoutSheetBase({
             <div className="p-4 flex gap-4 w-full">
               <Button
                 onClick={onConfirm}
-                className={`w-full h-12 flex-1 text-base font-semibold ${paymentMethod === "cash" ? "bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700" : "bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"}`}
+                disabled={isLoading}
+                className={`w-full h-12 flex-1 text-base font-semibold ${paymentMethod === "cash" ? "bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700" : "bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"} disabled:opacity-70`}
               >
-                Xác nhận hoàn tất
+                {isLoading ? "Đang xử lý..." : "Xác nhận hoàn tất"}
               </Button>
             </div>
           </div>

@@ -4,6 +4,7 @@ import { CheckoutSheet } from "./CheckoutSheet"
 import { formatPrice, formatInputNumber } from "@/utils/shopUtils"
 import { getQuantity } from "@/utils/shopUtils"
 import { CartItem, MilkTea, Topping } from "@/types/shop"
+import { useState } from "react"
 
 interface ShopSheetsProps {
   // State
@@ -84,13 +85,33 @@ export const ShopSheets = ({
   onClearDiscount,
   onBackToCart,
 }: ShopSheetsProps) => {
+  const [isLoading, setIsLoading] = useState(false)
+
+  const handleConfirmAddToCart = async (id: number) => {
+    setIsLoading(true)
+    try {
+      await onConfirmAddToCart(id)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleCompleteOrder = async () => {
+    setIsLoading(true)
+    try {
+      await onCompleteOrder()
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   return (
     <>
       {/* Overlay */}
       {activeSheet !== 'none' && (
-        <div 
-          className="fixed inset-0 bg-black/50 z-50 transition-opacity duration-300" 
-          onClick={onCloseSheet} 
+        <div
+          className="fixed inset-0 bg-black/50 z-50 transition-opacity duration-300"
+          onClick={onCloseSheet}
         />
       )}
 
@@ -112,7 +133,8 @@ export const ShopSheets = ({
         onSizeChange={onSizeChange}
         onNoteChange={onNoteChange}
         onToggleTopping={onToggleTopping}
-        onConfirm={onConfirmAddToCart}
+        onConfirm={handleConfirmAddToCart}
+        isLoading={isLoading}
       />
 
       {/* Cart Sheet */}
@@ -143,12 +165,12 @@ export const ShopSheets = ({
         formatPrice={formatPrice}
         onClose={onBackToCart}
         onNext={onPaymentMethodNext}
-        onConfirm={onCompleteOrder}
+        onConfirm={handleCompleteOrder}
         onPaymentChange={onPaymentChange}
         onCashChange={onCashChange}
         formatInputNumber={formatInputNumber}
+        isLoading={isLoading}
       />
     </>
   )
 }
-

@@ -1,10 +1,10 @@
 "use client"
 
-import { memo } from "react"
+import { memo, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Clock, CheckCircle, Circle, Trash2 } from "lucide-react"
+import { Clock, CheckCircle, Circle, Trash2, Loader2 } from "lucide-react"
 import { Separator } from "@/components/ui/separator"
 import { Order, Topping } from "@/types/shop"
 import { PDFService } from "@/services/pdfService"
@@ -19,12 +19,44 @@ interface Props {
 }
 
 function OrderManagementBase({ orders, formatPrice, formatDateTime, onToggleStatus, onDeleteOrder, onBackToOrder }: Props) {
+  const [processingOrderIds, setProcessingOrderIds] = useState<Set<number>>(new Set())
+
+  const isProcessing = (orderId: number) => processingOrderIds.has(orderId)
+
+  const withLoading = async (orderId: number, action: () => Promise<void> | void) => {
+    if (isProcessing(orderId)) return
+    setProcessingOrderIds(prev => new Set(prev).add(orderId))
+    try {
+      await action()
+    } finally {
+      setProcessingOrderIds(prev => {
+        const next = new Set(prev)
+        next.delete(orderId)
+        return next
+      })
+    }
+  }
+
   const handlePrintBill = (order: Order) => {
-    const pdfService = new PDFService({
-      formatPrice,
-      formatDateTime
+    withLoading(order.id, async () => {
+      const pdfService = new PDFService({
+        formatPrice,
+        formatDateTime
+      })
+      await pdfService.generateInvoice(order)
     })
-    pdfService.generateInvoice(order)
+  }
+
+  const handleToggleStatus = (order: Order) => {
+    withLoading(order.id, async () => {
+      await onToggleStatus(order)
+    })
+  }
+
+  const handleDeleteOrder = (order: Order) => {
+    withLoading(order.id, async () => {
+      await onDeleteOrder(order)
+    })
   }
 
   if (!orders.length) {
@@ -58,11 +90,23 @@ function OrderManagementBase({ orders, formatPrice, formatDateTime, onToggleStat
                 <p className="text-sm text-gray-600 mt-1">Thanh toán: {order.payment_method_id === 1 ? "Tiền mặt" : "Chuyển khoản"}</p>
               </div>
               <div className="flex gap-1">
-                <Button variant="ghost" size="sm" onClick={() => onToggleStatus(order)} className="h-8 w-8 p-0 text-green-600 hover:bg-green-100">
-                  {order.is_completed ? <CheckCircle className="w-5 h-5" /> : <Circle className="w-5 h-5" />}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleToggleStatus(order)}
+                  disabled={isProcessing(order.id)}
+                  className="h-8 w-8 p-0 text-green-600 hover:bg-green-100 disabled:opacity-50"
+                >
+                  {isProcessing(order.id) ? <Loader2 className="w-5 h-5 animate-spin" /> : (order.is_completed ? <CheckCircle className="w-5 h-5" /> : <Circle className="w-5 h-5" />)}
                 </Button>
-                <Button variant="ghost" size="sm" onClick={() => onDeleteOrder(order)} className="h-8 w-8 p-0 text-red-600 hover:bg-red-100">
-                  <Trash2 className="w-5 h-5" />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleDeleteOrder(order)}
+                  disabled={isProcessing(order.id)}
+                  className="h-8 w-8 p-0 text-red-600 hover:bg-red-100 disabled:opacity-50"
+                >
+                  {isProcessing(order.id) ? <Loader2 className="w-5 h-5 animate-spin" /> : <Trash2 className="w-5 h-5" />}
                 </Button>
               </div>
             </div>
@@ -98,10 +142,22 @@ function OrderManagementBase({ orders, formatPrice, formatDateTime, onToggleStat
               <span className="font-bold text-xl text-green-600">{formatPrice(order.total_amount)}</span>
             </div>
             <div className="flex gap-2 mt-3">
-              <Button variant="outline" onClick={() => handlePrintBill(order)} className="flex-1 border-green-300 text-green-700">
+              <Button
+                variant="outline"
+                onClick={() => handlePrintBill(order)}
+                disabled={isProcessing(order.id)}
+                className="flex-1 border-green-300 text-green-700 disabled:opacity-50"
+              >
+                {isProcessing(order.id) ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
                 In hóa đơn
               </Button>
-              <Button variant="default" onClick={() => onToggleStatus(order)} className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600">
+              <Button
+                variant="default"
+                onClick={() => handleToggleStatus(order)}
+                disabled={isProcessing(order.id)}
+                className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 disabled:opacity-70"
+              >
+                {isProcessing(order.id) ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
                 {order.is_completed ? "Đánh dấu chưa xong" : "Đánh dấu hoàn tất"}
               </Button>
             </div>
