@@ -1,5 +1,5 @@
-import MilkTeaList from "@/components/MilkTeaList"
-import ToppingList from "@/components/ToppingList"
+import MilkTeaList from "@/components/menu/MilkTeaList"
+import ToppingList from "@/components/menu/ToppingList"
 import { OrderManagement } from "./OrderManagement"
 import { formatPrice, formatDateTime, getQuantity, sortOrders } from "@/utils/shopUtils"
 import { MilkTea, Order, Topping } from "@/types/shop"
@@ -74,4 +74,3 @@ export const ShopContent = ({
     </>
   )
 }
-

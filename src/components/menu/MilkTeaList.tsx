@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import SearchBar from "./SearchBar"
 import { useState, useMemo } from "react"
 import type { MilkTea } from "@/types/shop"
+import { UI_STRINGS } from "@/constants/strings"
 
 interface MilkTeaListProps {
   milkTeas: MilkTea[]
@@ -37,7 +38,7 @@ export default function MilkTeaList({
     return milkTeas.filter((milkTea) => {
       const name = milkTea.name?.toLowerCase() || ""
       const description = milkTea.description?.toLowerCase() || ""
-      
+
       // Tìm kiếm theo từng ký tự - kiểm tra xem query có là substring của name hoặc description không
       return name.includes(query) || description.includes(query)
     })
@@ -97,10 +98,10 @@ export default function MilkTeaList({
   return (
     <div className="p-4 max-w-md mx-auto pb-12">
       <SearchBar onSearch={handleSearch} />
-      
+
       {filteredMilkTeas.length === 0 && searchQuery && (
         <div className="text-center py-8">
-          <p className="text-gray-500 text-sm">Không tìm thấy trà sữa nào phù hợp với {'"' + searchQuery + '"'}</p>
+          <p className="text-gray-500 text-sm">{UI_STRINGS.NO_RESULTS} {'"' + searchQuery + '"'}</p>
         </div>
       )}
 
@@ -166,7 +167,7 @@ export default function MilkTeaList({
                         onClick={() => handleAddToCart(milkTea)}
                         disabled={getQuantity(milkTea.id) === 0}
                       >
-                        Chọn
+                        {UI_STRINGS.SELECT}
                       </Button>
                     </div>
                   </div>
@@ -178,4 +179,4 @@ export default function MilkTeaList({
       </div>
     </div>
   )
-} 
+}

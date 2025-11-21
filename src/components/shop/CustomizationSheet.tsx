@@ -1,6 +1,6 @@
 "use client"
 
-import { memo, useMemo, useEffect, useState } from "react"
+import { memo } from "react"
 import { ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -9,8 +9,9 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Separator } from "@/components/ui/separator"
 
-import { MilkTea, Topping, SweetValue, IceValue, SizeValue, SweetnessLevelOption, IceLevelOption, SizeOption, fetchSweetnessLevels, fetchIceLevels, fetchSizes } from "@/types/shop"
-import { ProductSizePrices, fetchProductSizePrices } from "@/types/option";
+import { MilkTea, Topping, SweetValue, IceValue, SizeValue } from "@/types/shop"
+import { useCustomization } from "@/hooks/useCustomization"
+import { UI_STRINGS } from "@/constants/strings"
 
 interface Props {
   open: boolean
@@ -53,62 +54,24 @@ function CustomizationSheetBase({
   onConfirm,
   isLoading = false,
 }: Props) {
-  const [sweetnessLevels, setSweetnessLevels] = useState<SweetnessLevelOption[]>([])
-  const [iceLevels, setIceLevels] = useState<IceLevelOption[]>([])
-  const [sizes, setSizes] = useState<SizeOption[]>([])
-  const [productSizePrices, setProductSizePrices] = useState<ProductSizePrices[]>([])
-  const [isLoadingLevels, setIsLoadingLevels] = useState(true)
-  const [selectedSize, setSelectedSize] = useState<string>('')
-
-  // Fetch levels when component mounts
-  useEffect(() => {
-    const loadLevels = async () => {
-      setIsLoadingLevels(true)
-      try {
-        const [sweetnessData, iceData, sizesData, productSizePricesData] = await Promise.all([
-          fetchSweetnessLevels(),
-          fetchIceLevels(),
-          fetchSizes(),
-          fetchProductSizePrices()
-        ])
-        setSweetnessLevels(sweetnessData)
-        setIceLevels(iceData)
-        setSizes(sizesData)
-        if (sizesData.length > 0) {
-          if (productSizePricesData.find(val => val.product_id == milkTea?.id)) {
-            const sizeValue = productSizePricesData.find(val => val.product_id == milkTea?.id)?.size_id.toString() as SizeValue
-            setSelectedSize(sizeValue || '')
-            onSizeChange(sizeValue)
-          }
-        }
-        setProductSizePrices(productSizePricesData)
-      } catch (error) {
-        console.error('Error loading levels:', error)
-      } finally {
-        setIsLoadingLevels(false)
-      }
-    }
-
-    if (open) {
-      loadLevels()
-    }
-  }, [open])
-
-  const toppingsSum = useMemo(() => sheetToppings.reduce((s, t) => s + t.price, 0), [sheetToppings])
-
-  const sizePrice = useMemo(() => {
-    if (!milkTea) return 0
-    const sizePriceData = productSizePrices.find(
-      p => p.product_id === milkTea.id && p.size_id === Number(sheetSize)
-    )
-    return sizePriceData?.price || 0
-  }, [productSizePrices, milkTea, sheetSize])
-
-  const total = useMemo(() => {
-    if (!milkTea) return 0
-    const base = (milkTea.base_price + toppingsSum + sizePrice) * quantity;
-    return base
-  }, [milkTea, toppingsSum, quantity, sizePrice])
+  const {
+    sweetnessLevels,
+    iceLevels,
+    sizes,
+    productSizePrices,
+    isLoadingLevels,
+    selectedSize,
+    toppingsSum,
+    sizePrice,
+    total
+  } = useCustomization({
+    open,
+    milkTea,
+    sheetSize,
+    sheetToppings,
+    quantity,
+    onSizeChange
+  })
 
   if (!open) return null
 
@@ -122,7 +85,7 @@ function CustomizationSheetBase({
             </Button>
             <h2 className="text-lg font-bold text-green-600 flex items-center gap-2 flex-1 justify-center">
               <span>🌿</span>
-              Tùy chỉnh đồ uống
+              {UI_STRINGS.CUSTOMIZE_TITLE}
             </h2>
             <div className="w-8"></div>
           </div>
@@ -134,13 +97,13 @@ function CustomizationSheetBase({
                 <Card className="border-green-100">
                   <CardContent className="p-3 text-center">
                     <h3 className="font-semibold text-gray-800">{milkTea.name}</h3>
-                    <p className="text-sm text-gray-600">Số lượng: {quantity}</p>
+                    <p className="text-sm text-gray-600">{UI_STRINGS.QUANTITY} {quantity}</p>
                   </CardContent>
                 </Card>
 
                 {/* Toppings */}
                 <div>
-                  <Label className="text-sm font-semibold text-gray-700">Chọn topping</Label>
+                  <Label className="text-sm font-semibold text-gray-700">{UI_STRINGS.SELECT_TOPPING}</Label>
                   <div className="grid gap-2 mt-2">
                     {toppings.map((topping) => (
                       <div key={topping.id} className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-50">
@@ -162,9 +125,9 @@ function CustomizationSheetBase({
 
                 {/* Sweetness */}
                 <div>
-                  <Label className="text-sm font-semibold text-gray-700">Độ ngọt</Label>
+                  <Label className="text-sm font-semibold text-gray-700">{UI_STRINGS.SWEETNESS_LEVEL}</Label>
                   {isLoadingLevels ? (
-                    <div className="mt-2 p-2 text-sm text-gray-500">Đang tải...</div>
+                    <div className="mt-2 p-2 text-sm text-gray-500">{UI_STRINGS.LOADING}</div>
                   ) : (
                     <RadioGroup value={sheetSweetness} onValueChange={(v) => onSweetChange(v as SweetValue)} className="mt-2">
                       {sweetnessLevels.map((level) => (
@@ -183,9 +146,9 @@ function CustomizationSheetBase({
 
                 {/* Ice */}
                 <div>
-                  <Label className="text-sm font-semibold text-gray-700">Lượng đá</Label>
+                  <Label className="text-sm font-semibold text-gray-700">{UI_STRINGS.ICE_LEVEL}</Label>
                   {isLoadingLevels ? (
-                    <div className="mt-2 p-2 text-sm text-gray-500">Đang tải...</div>
+                    <div className="mt-2 p-2 text-sm text-gray-500">{UI_STRINGS.LOADING}</div>
                   ) : (
                     <RadioGroup value={sheetIce} onValueChange={(v) => onIceChange(v as IceValue)} className="mt-2">
                       {iceLevels.map((level) => (
@@ -203,9 +166,9 @@ function CustomizationSheetBase({
                 <Separator />
                 {/* Size */}
                 <div>
-                  <Label className="text-sm font-semibold text-gray-700">Kích thước</Label>
+                  <Label className="text-sm font-semibold text-gray-700">{UI_STRINGS.SIZE}</Label>
                   {isLoadingLevels ? (
-                    <div className="mt-2 p-2 text-sm text-gray-500">Đang tải...</div>
+                    <div className="mt-2 p-2 text-sm text-gray-500">{UI_STRINGS.LOADING}</div>
                   ) : (
                     <RadioGroup value={sheetSize || selectedSize as string} onValueChange={(v) => onSizeChange(v as SizeValue)} className="mt-2">
                       {sizes.map((size) => {
@@ -232,16 +195,16 @@ function CustomizationSheetBase({
 
                 {/* Note */}
                 <div>
-                  <Label className="text-sm font-semibold text-gray-700">Ghi chú cho ly trà sữa</Label>
+                  <Label className="text-sm font-semibold text-gray-700">{UI_STRINGS.NOTE_LABEL}</Label>
                   <textarea
                     value={sheetNote}
                     onChange={(e) => onNoteChange(e.target.value)}
-                    placeholder="Ví dụ: Ít đường hơn, nhiều đá, không topping, thêm lá bạc hà..."
+                    placeholder={UI_STRINGS.NOTE_PLACEHOLDER}
                     className="w-full mt-2 p-3 border border-gray-300 rounded-lg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                     rows={3}
                     maxLength={200}
                   />
-                  <div className="text-xs text-gray-400 mt-1 text-right">{sheetNote.length}/200 ký tự</div>
+                  <div className="text-xs text-gray-400 mt-1 text-right">{sheetNote.length}{UI_STRINGS.NOTE_LIMIT}</div>
                 </div>
               </div>
             </div>
@@ -251,24 +214,24 @@ function CustomizationSheetBase({
               <div className="p-4">
                 <div className="bg-green-50 p-4 rounded-lg">
                   <div className="flex justify-between text-sm mb-1">
-                    <span>Giá gốc:</span>
+                    <span>{UI_STRINGS.ORIGINAL_PRICE}</span>
                     <span>{milkTea ? formatPrice(milkTea.base_price * quantity) : ""}</span>
                   </div>
                   {sizePrice > 0 && (
                     <div className="flex justify-between text-sm mb-1">
-                      <span>Kích thước:</span>
+                      <span>{UI_STRINGS.SIZE_PRICE}</span>
                       <span>+{formatPrice(sizePrice * quantity)}</span>
                     </div>
                   )}
                   {sheetToppings.length > 0 && (
                     <div className="flex justify-between text-sm mb-1">
-                      <span>Topping:</span>
+                      <span>{UI_STRINGS.TOPPING_PRICE}</span>
                       <span>+{formatPrice(toppingsSum * quantity)}</span>
                     </div>
                   )}
                   <Separator className="my-2" />
                   <div className="flex justify-between font-semibold text-green-600">
-                    <span>Tổng cộng:</span>
+                    <span>{UI_STRINGS.TOTAL_PRICE}</span>
                     <span>{formatPrice(total)}</span>
                   </div>
                 </div>
@@ -278,7 +241,7 @@ function CustomizationSheetBase({
                   disabled={isLoading}
                   className="w-full mt-4 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 h-12 text-base font-semibold disabled:opacity-70"
                 >
-                  {isLoading ? "Đang thêm..." : "Thêm vào giỏ hàng"}
+                  {isLoading ? UI_STRINGS.ADDING_TO_CART : UI_STRINGS.ADD_TO_CART}
                 </Button>
               </div>
             </div>

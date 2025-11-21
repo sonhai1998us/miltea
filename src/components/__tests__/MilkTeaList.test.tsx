@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
-import MilkTeaList from "@/components/MilkTeaList"
+import MilkTeaList from "@/components/menu/MilkTeaList"
 import { act } from "react-dom/test-utils"
 import type { MilkTea } from "@/types/shop"
 

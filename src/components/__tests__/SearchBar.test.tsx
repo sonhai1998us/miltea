@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
-import SearchBar from "@/components/SearchBar"
+import SearchBar from "@/components/menu/SearchBar"
 import { act } from "react"
 
 jest.mock("lucide-react", () => ({
@@ -36,7 +36,7 @@ describe("SearchBar", () => {
     const clearBtn = screen.getByRole("button")
     await user.click(clearBtn)
     expect(onSearch).toHaveBeenLastCalledWith("")
-  },10000)
+  }, 10000)
 })
 
 
