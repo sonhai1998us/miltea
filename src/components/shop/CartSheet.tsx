@@ -59,8 +59,8 @@ function CartSheetBase({ open, cart, formatPrice, total, onClose, onRemove, onCh
               <div className="p-4 space-y-4">
                 {cart.map((item) => {
                   const toppingsPrice = item.toppings ? item.toppings.reduce((sum, topping) => sum + topping.price, 0) * item.quantity : 0
-                  const itemTotal = ((item.product_price || item.topping_price) * item.quantity) + toppingsPrice + (item?.size_price ?? 0 *item.quantity)
-                  
+                  const itemTotal = ((item.product_price || item.topping_price) * item.quantity) + (toppingsPrice) + ((item?.size_price ?? 0) * item.quantity)
+
                   return (
                     <Card key={item.id} className="border-green-200">
                       <CardContent className="p-4">
@@ -73,23 +73,23 @@ function CartSheetBase({ open, cart, formatPrice, total, onClose, onRemove, onCh
                         <div className="text-sm text-gray-600 space-y-1 mb-3">
                           <p>Số lượng: {item.quantity}</p>
                           {item.product_name && <>
-                          <p>Độ ngọt: {item.sweetness_name}</p>
-                          <p>Lượng đá: {item.ice_name}</p>
-                          {item.toppings?.length ? (
-                            <div>
-                              <p className="font-medium">Toppings:</p>
-                              <div className="ml-2 space-y-1">
-                                {item.toppings.map((topping, index) => (
-                                  <div key={index} className="flex justify-between text-xs">
-                                    <span>• {topping.name}</span>
-                                    <span className="text-green-600">+{formatPrice(item.quantity * topping.price)}</span>
-                                  </div>
-                                ))}
+                            <p>Độ ngọt: {item.sweetness_name}</p>
+                            <p>Lượng đá: {item.ice_name}</p>
+                            {item.toppings?.length ? (
+                              <div>
+                                <p className="font-medium">Toppings:</p>
+                                <div className="ml-2 space-y-1">
+                                  {item.toppings.map((topping, index) => (
+                                    <div key={index} className="flex justify-between text-xs">
+                                      <span>• {topping.name}</span>
+                                      <span className="text-green-600">+{formatPrice(item.quantity * topping.price)}</span>
+                                    </div>
+                                  ))}
+                                </div>
                               </div>
-                            </div>
-                          ) : (
-                            <p>Topping: Không thêm Topping</p>
-                          )}
+                            ) : (
+                              <p>Topping: Không thêm Topping</p>
+                            )}
                           </>}
                           {item.notes && <p className="text-green-600 font-medium">Ghi chú: {item.notes}</p>}
                         </div>
