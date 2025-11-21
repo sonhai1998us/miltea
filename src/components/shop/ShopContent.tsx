@@ -41,7 +41,6 @@ export const ShopContent = ({
   const updateQuantityForId = (id: number, newQuantity: number) => {
     onQuantityChange(id, newQuantity)
   }
-
   return (
     <>
       {activeTab === "order" ? (

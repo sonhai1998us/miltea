@@ -264,14 +264,17 @@ export const useShopActions = (
   }, [setOrders])
 
   // Delete order
-  const handleDeleteOrder = useCallback(async (order: Order) => {
-    if (!confirm('Bạn có chắc muốn xóa đơn hàng này?')) return
+  const deleteOrder = useCallback(async (order: Order) => {
+    if (!confirm('Bạn có chắc muốn xóa đơn hàng này?')) {
+      return
+    }
 
     setOrders((prev) => prev.filter((o) => o.id !== order.id))
 
-    const refreshedOrders = await ShopService.fetchOrders()
-    setOrders(refreshedOrders)
-  }, [setOrders])
+    await ShopService.deleteOrder(order.id).then(resp => resp)
+    ShopService.fetchOrders().then(resp => setOrders(resp))
+
+  }, [setOrders, state.orders])
 
   return {
     getTotalCartPrice,
@@ -284,7 +287,7 @@ export const useShopActions = (
     handlePaymentMethodNext,
     handleCompleteOrder,
     toggleOrderStatus,
+    deleteOrder,
     handleSelectTopping,
-    handleDeleteOrder,
   }
 }

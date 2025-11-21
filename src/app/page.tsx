@@ -41,7 +41,7 @@ export default function FoxMilkTeaShop() {
         onAddToCart={actions.handleAddToCart}
         onSelectTopping={actions.handleSelectTopping}
         onToggleOrderStatus={actions.toggleOrderStatus}
-        onDeleteOrder={actions.handleDeleteOrder}
+        onDeleteOrder={actions.deleteOrder}
         onBackToOrder={() => state.setActiveTab("order")}
         onQuantityChange={(id: number, newQuantity: number) => {
           state.setQuantities(updateQuantity(state.quantities, id, newQuantity))
