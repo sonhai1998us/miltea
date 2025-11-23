@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 
 interface HeaderBarProps {
-  activeTab: "order" | "manage"
+  activeTab: "order" | "manage" | "statistics"
   cartCount: number
   onOpenCart: () => void
 }
