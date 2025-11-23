@@ -40,7 +40,7 @@ export default function RevenueStatistics() {
                 type,
                 scope
             })
-            const response = await fetch(`http://localhost:8102/v1/revenues?${queryParams}`)
+            const response = await fetch(`${process.env.API_URL}${process.env.PREFIX_API}/revenues?${queryParams}`)
             const result = await response.json()
             if (result.status === "success") {
                 setData(result.data.data)
