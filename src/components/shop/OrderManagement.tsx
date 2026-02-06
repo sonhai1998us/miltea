@@ -12,7 +12,7 @@ import { PDFService } from "@/services/pdfService"
 interface Props {
   orders: Order[]
   formatPrice: (n: number) => string
-  formatDateTime: (d: Date) => string
+  formatDateTime: (d: Date | string | number) => string
   onToggleStatus: (o: Order) => void
   onDeleteOrder: (o: Order) => void
   onBackToOrder: () => void

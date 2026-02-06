@@ -20,7 +20,7 @@ declare module 'jspdf' {
 
 export interface PDFServiceConfig {
   formatPrice: (n: number) => string
-  formatDateTime: (d: Date) => string
+  formatDateTime: (d: Date | string | number) => string
   /** Có thể là dataURL (data:image/...) hoặc đường dẫn public (/images/...) */
   logoDataUrl?: string
   qrDataUrl?: string

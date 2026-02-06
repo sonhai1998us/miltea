@@ -9,7 +9,7 @@ export const formatPrice = (price: number): string => {
 }
 
 // Format date time to Vietnamese format
-export const formatDateTime = (date: Date): string => {
+export const formatDateTime = (date: Date | string | number): string => {
   return new Intl.DateTimeFormat("vi-VN", { 
     day: "2-digit", 
     month: "2-digit", 

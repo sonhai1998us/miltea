@@ -126,7 +126,7 @@ export class ShopService {
   // Create order
   static async createOrder(orderData: {
     payment_method_id: number
-    order_time: Date
+    order_time: string | Date
     total_amount: number
     is_completed: number
     discount_amount: number

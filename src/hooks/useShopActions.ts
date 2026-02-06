@@ -158,7 +158,9 @@ export const useShopActions = (
     const now = new Date();
     const orderData = {
       payment_method_id: paymentMethod === "cash" ? 1 : 2,
-      order_time: new Date(now.getTime() + 7 * 60 * 60 * 1000),
+      order_time: new Date(now.getTime() + 7 * 60 * 60 * 1000).toISOString()
+      .slice(0, 19)
+      .replace('T', ' '),
       total_amount: getTotalCartPrice,
       is_completed: 0,
       discount_amount: discountLocked ? discountAmount : 0,

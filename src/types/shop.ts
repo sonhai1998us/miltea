@@ -49,7 +49,7 @@ export interface Order {
   items: CartItem[]
   total_price: number
   paymentMethod: string
-  order_time: Date
+  order_time: string | Date
   payment_method_id: number
   total_amount: number
   discount_amount: number
