@@ -45,6 +45,7 @@ const nextConfig: NextConfig = {
       pathname: '/image/**'
     }],
   },
+  turbopack: {},
 };
 
 export default nextConfig;
