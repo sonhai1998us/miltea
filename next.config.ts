@@ -38,13 +38,13 @@ const nextConfig: NextConfig = {
   },
   env: {...enviroment},
   output: "standalone",
-  images: {
-    remotePatterns: [{
-      protocol: 'https',
-      hostname: 'img.vietqr.io',
-      pathname: '/image/**'
-    }],
-  },
+  // images: {
+  //   remotePatterns: [{
+  //     protocol: 'https',
+  //     hostname: 'img.vietqr.io',
+  //     pathname: '/image/**'
+  //   }],
+  // },
   turbopack: {},
 };
 

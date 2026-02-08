@@ -140,7 +140,7 @@ function CheckoutSheetBase({
                   <div className="bg-white rounded-lg flex items-center justify-center">
                     <div className="text-center">
                       <div className="bg-gray-100 rounded-lg flex items-center justify-center mb-2">
-                        <Image alt="" src={`/images/qr.jpg`} width={600} height={776} />
+                        {/* <Image alt="" src={`/images/qr.jpg`} width={600} height={776} /> */}
                         {/* https://img.vietqr.io/image/VCB-9931782220-qr_only.png?amount=${total} */}
                       </div>
                     </div>
