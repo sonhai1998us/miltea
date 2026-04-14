@@ -18,13 +18,17 @@ require("dotenv").config({
 const enviroment = {
   API_URL: process.env.API_URL,
   PREFIX_API: process.env.PREFIX_API,
-  GG_CLIENT_ID : process.env.GG_CLIENT_ID ,
+  GG_CLIENT_ID: process.env.GG_CLIENT_ID,
   GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
   CDN_URL_S3: process.env.CDN_URL_S3,
   RECAPTCHA_SITE_KEY: process.env.RECAPTCHA_SITE_KEY,
   RECAPTCHA_SECRET_KEY: process.env.RECAPTCHA_SECRET_KEY,
   PASSPORT_URL: process.env.PASSPORT_URL,
   DOMAIN_URL: process.env.DOMAIN_URL,
+  STORE_LAT: process.env.STORE_LAT,
+  STORE_LNG: process.env.STORE_LNG,
+  STORE_RADIUS: process.env.STORE_RADIUS,
+  ADMIN_PIN: process.env.ADMIN_PIN,
 }
 
 const nextConfig: NextConfig = {
@@ -36,7 +40,7 @@ const nextConfig: NextConfig = {
     });
     return config;
   },
-  env: {...enviroment},
+  env: { ...enviroment },
   output: "standalone",
   // images: {
   //   remotePatterns: [{

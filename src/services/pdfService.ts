@@ -147,13 +147,13 @@ export class PDFService {
     const WHITE: [number, number, number] = [255, 255, 255]
 
     const store = {
-      name:    this.config.store?.name    ?? 'Lá và Sương',
-      slogan:  this.config.store?.slogan  ?? 'Cà phê - Trà sữa - Trà trái cây',
+      name: this.config.store?.name ?? 'Lá và Sương',
+      slogan: this.config.store?.slogan ?? 'Cà phê - Trà sữa - Trà trái cây',
       address: this.config.store?.address ?? '36/27B Đ. Số 4, phường Hiệp Bình, Thủ Đức, Hồ Chí Minh',
-      phone:   this.config.store?.phone   ?? 'ĐT: 0931 792 220',
+      phone: this.config.store?.phone ?? 'ĐT: 0931 792 220',
     }
 
-    const centerText = (t: string, yy: number, fs = 12, f: 'normal'|'bold'='normal') => {
+    const centerText = (t: string, yy: number, fs = 12, f: 'normal' | 'bold' = 'normal') => {
       doc.setFont('times', f); doc.setFontSize(fs); doc.setTextColor(...BLACK)
       const x = (pageWidth - doc.getTextWidth(t)) / 2
       doc.text(t, x, yy)
@@ -170,7 +170,7 @@ export class PDFService {
         // Đặt logo kích thước nhỏ gọn để nét đen rõ
         this.addImageSmart(doc, doc._resolvedLogo, marginX, y - 2, 12, 12)
         y += 2
-      } catch {}
+      } catch { }
     }
 
     y = centerText(store.name, y, 16, 'bold')
@@ -182,12 +182,12 @@ export class PDFService {
     y = centerText('HÓA ĐƠN BÁN HÀNG', y, 12, 'bold'); y += 2
 
     // Info + QR
-    const info: Array<[string,string]> = [
+    const info: Array<[string, string]> = [
       ['Mã đơn', `#${order.id?.toString().slice(-6) ?? '------'}`],
       ['Ngày', this.config.formatDateTime(order.order_time)],
       ['Thanh toán', order.payment_method_id === 1 ? 'Tiền mặt' : 'Chuyển khoản'],
     ]
-    doc.setFont('times','normal'); doc.setFontSize(9.5); doc.setTextColor(...BLACK)
+    doc.setFont('times', 'normal'); doc.setFontSize(9.5); doc.setTextColor(...BLACK)
     const qrSize = 24, infoRightX = pageWidth - marginX - qrSize
 
     if (doc._resolvedQR) {
@@ -196,77 +196,77 @@ export class PDFService {
         doc.setDrawColor(...BLACK); doc.setLineWidth(0.3)
         doc.rect(infoRightX, y, qrSize, qrSize, 'S')
         this.addImageSmart(doc, doc._resolvedQR, infoRightX + 1.2, y + 1.2, qrSize - 2.4, qrSize - 2.4)
-      } catch {}
+      } catch { }
     }
 
     let infoY = y + 1; const keyW = 22
-    info.forEach(([k,v])=>{
+    info.forEach(([k, v]) => {
       const val = this.softWrap(v)
-      doc.setFont('times','bold'); doc.text(`${k}:`, marginX, infoY)
-      doc.setFont('times','normal')
+      doc.setFont('times', 'bold'); doc.text(`${k}:`, marginX, infoY)
+      doc.setFont('times', 'normal')
       const maxW = doc._resolvedQR ? (infoRightX - 2 - (marginX + keyW)) : (contentWidth - keyW)
       doc.text(doc.splitTextToSize(val, Math.max(20, maxW)), marginX + keyW, infoY)
       infoY += 5.2
     })
-    y = Math.max(infoY, doc._resolvedQR ? y + qrSize + 2 : infoY); y += 4; drawDivider(y,.3); y += 3
+    y = Math.max(infoY, doc._resolvedQR ? y + qrSize + 2 : infoY); y += 4; drawDivider(y, .3); y += 3
 
     // BẢNG HÀNG HÓA (BW thuần)
     const qtyW = 8, unitW = 22, totalW = 24
     const productW = contentWidth - (qtyW + unitW + totalW)
 
     const rows: RowInput[] = []
-    ;(order.items || []).forEach((item) => {
-      const name = this.softWrap(item.product_name ?? item.topping_name ?? '')
+      ; (order.items || []).forEach((item) => {
+        const name = this.softWrap(item.product_name ?? item.topping_name ?? '')
 
-      const detailLines: string[] = []
-      if (item.size_name) detailLines.push(this.softWrap(`Size: ${item.size_name}${item.size_price>0?` (+${this.config.formatPrice(item.size_price)})`:''}`))
-      if (item.sweetness_name || item.ice_name)
-        detailLines.push(this.softWrap(item.sweetness_name && item.ice_name ? `${item.sweetness_name} - ${item.ice_name}` : (item.sweetness_name || item.ice_name || '')))
-      if (item.toppings?.length)
-        detailLines.push(this.softWrap(item.toppings.map((t:Topping)=>`${t.name}${t.price>0?` (+${this.config.formatPrice(t.price)})`:''}`).join(', ')))
-      if (item.notes) detailLines.push(this.softWrap(`Ghi chú: ${item.notes}`))
+        const detailLines: string[] = []
+        if (item.size_name) detailLines.push(this.softWrap(`Size: ${item.size_name}${item.size_price > 0 ? ` (+${this.config.formatPrice(item.size_price)})` : ''}`))
+        if (item.sweetness_name || item.ice_name)
+          detailLines.push(this.softWrap(item.sweetness_name && item.ice_name ? `${item.sweetness_name} - ${item.ice_name}` : (item.sweetness_name || item.ice_name || '')))
+        if (item.toppings?.length)
+          detailLines.push(this.softWrap(item.toppings.map((t: Topping) => `${t.name}${t.price > 0 ? ` (+${this.config.formatPrice(t.price)})` : ''}`).join(', ')))
+        if (item.notes) detailLines.push(this.softWrap(`Ghi chú: ${item.notes}`))
 
-      const unitPrice = item.product_price ?? item.topping_price ?? 0
-      const sizePrice = item.size_price ?? 0
-      const toppingsPrice = (item.toppings || []).reduce((s, t) => s + (t.price || 0), 0)
-      const totalUnitPrice = unitPrice + sizePrice + toppingsPrice
-      const lineTotal = totalUnitPrice * (item.quantity ?? 1)
+        const unitPrice = item.product_price ?? item.topping_price ?? 0
+        const sizePrice = item.size_price ?? 0
+        const toppingsPrice = (item.toppings || []).reduce((s, t) => s + (t.price || 0), 0)
+        const totalUnitPrice = unitPrice + sizePrice + toppingsPrice
+        const lineTotal = totalUnitPrice * (item.quantity ?? 1)
 
-      rows.push([
-        { content: name } as CellInput,
-        String(item.quantity ?? 1),
-        this.config.formatPrice(unitPrice),
-        this.config.formatPrice(lineTotal),
-      ])
-
-      if (detailLines.length) {
-        const detailRaw: DetailCellRaw = { __isDetail: true }
         rows.push([
-          {
-            content: '↳ ' + detailLines.join('\n   • '),
-            colSpan: 4,
-            styles: {
-              fontSize: 8.5,
-              textColor: BLACK,
-              cellPadding: { top: 1.6, right: 2, bottom: 1.8, left: 8 },
-              halign: 'left',
-              // Không fill color để tránh xám → trắng (BW)
-              fillColor: WHITE,
-              lineWidth: 0.2,
-              lineColor: BLACK,
-              overflow: 'linebreak',
-            },
-            raw: detailRaw,
-          } as unknown as CellInput,
+          { content: name } as CellInput,
+          String(item.quantity ?? 1),
+          this.config.formatPrice(unitPrice),
+          this.config.formatPrice(lineTotal),
         ])
-      }
-    })
+
+        if (detailLines.length) {
+          const detailRaw: DetailCellRaw = { __isDetail: true }
+          rows.push([
+            {
+              content: '↳ ' + detailLines.join('\n   • '),
+              colSpan: 4,
+              styles: {
+                fontSize: 8.5,
+                textColor: BLACK,
+                cellPadding: { top: 1.6, right: 2, bottom: 1.8, left: 8 },
+                halign: 'left',
+                // Không fill color để tránh xám → trắng (BW)
+                fillColor: WHITE,
+                lineWidth: 0.2,
+                lineColor: BLACK,
+                overflow: 'linebreak',
+              },
+              raw: detailRaw,
+            } as unknown as CellInput,
+          ])
+        }
+      })
 
     autoTable(doc, {
       startY: y,
       tableWidth: contentWidth,
       theme: 'grid',
-      head: [['Sản phẩm','SL','Đơn giá','Thành tiền']],
+      head: [['Sản phẩm', 'SL', 'Đơn giá', 'Thành tiền']],
       body: rows,
       margin: { left: marginX, right: marginX },
       styles: {
@@ -291,10 +291,10 @@ export class PDFService {
       },
       alternateRowStyles: { fillColor: WHITE }, // bỏ sọc xám
       columnStyles: {
-        0: { cellWidth: productW + 5, halign: 'left',  overflow: 'linebreak' },
-        1: { cellWidth: qtyW,    halign: 'center', overflow: 'ellipsize' },
-        2: { cellWidth: unitW - 5,   halign: 'right',  overflow: 'ellipsize' },
-        3: { cellWidth: totalW - 5,  halign: 'right',  overflow: 'ellipsize' },
+        0: { cellWidth: productW + 5, halign: 'left', overflow: 'linebreak' },
+        1: { cellWidth: qtyW, halign: 'center', overflow: 'ellipsize' },
+        2: { cellWidth: unitW - 5, halign: 'right', overflow: 'ellipsize' },
+        3: { cellWidth: totalW - 5, halign: 'right', overflow: 'ellipsize' },
       },
       rowPageBreak: 'auto',
       didDrawCell: (data: CellHookData) => {
@@ -303,7 +303,7 @@ export class PDFService {
           const lx = data.cell.x + 5.5
           const y1 = data.cell.y + 1.0
           const y2 = data.cell.y + (Number.isFinite(data.cell.height) ? data.cell.height : 0) - 1.0
-      
+
           if ([lx, y1, lx, y2].every(Number.isFinite)) {
             data.doc.setDrawColor(0, 0, 0)
             data.doc.setLineWidth(0.25)
@@ -326,7 +326,7 @@ export class PDFService {
     const discount = order.discount_amount ?? 0
     const totalAmount = order.total_amount ?? Math.max(0, itemsSubtotal - discount)
 
-    const summaryRows: Array<[string,string]> = [['Tổng tính:', this.config.formatPrice(itemsSubtotal)]]
+    const summaryRows: Array<[string, string]> = [['Tổng tính:', this.config.formatPrice(itemsSubtotal)]]
     if (discount > 0) summaryRows.push(['Giảm giá:', `-${this.config.formatPrice(discount)}`])
     summaryRows.push(['TỔNG CỘNG:', this.config.formatPrice(totalAmount)])
 
@@ -350,7 +350,7 @@ export class PDFService {
       },
       didDrawCell: (data: CellHookData) => {
         const isTotal = data.row.index === (data.table.body?.length ?? 0) - 1
-      
+
         // Chỉ xử lý khi đang ở cột đầu để vẽ cho cả hàng
         if (isTotal && data.column.index === 0) {
           const doc = data.doc as jsPDF
@@ -361,11 +361,11 @@ export class PDFService {
               ? Object.values((data as any).row.cells) // eslint-disable-line
               : []
           const rowWidth = rowCells.reduce((sum, c: any) => sum + (c?.width || 0), 0) // eslint-disable-line
-      
+
           const xR = xL + rowWidth
           const yTop = data.cell.y
           const yBot = data.cell.y + data.cell.height
-      
+
           if ([xL, xR, yTop, yBot].every(Number.isFinite)) {
             doc.setTextColor(0, 0, 0)
             doc.setDrawColor(0, 0, 0)
@@ -385,10 +385,141 @@ export class PDFService {
 
     // Footer (BW)
     doc.setDrawColor(...BLACK); doc.setLineWidth(0.3); doc.line(marginX, y, pageWidth - marginX, y); y += 5
-    doc.setFont('times','normal'); doc.setFontSize(9.5); doc.setTextColor(...BLACK)
+    doc.setFont('times', 'normal'); doc.setFontSize(9.5); doc.setTextColor(...BLACK)
     const thank = 'Cảm ơn quý khách đã sử dụng dịch vụ! Hẹn gặp lại quý khách lần sau.'
     doc.text(doc.splitTextToSize(thank, contentWidth), marginX, y)
     y += 2
+
+    return y
+  }
+
+  // ---------- THANK-YOU RENDER ----------
+  private renderThankYou(doc: jsPDF, order: Order): number {
+    const pageWidth = doc.internal.pageSize.getWidth()
+    const marginX = 6
+    const contentWidth = pageWidth - marginX * 2
+    let y = 10
+
+    const BLACK: [number, number, number] = [0, 0, 0]
+    const WHITE: [number, number, number] = [255, 255, 255]
+
+    const store = {
+      name: this.config.store?.name ?? 'Lá và Sương',
+      slogan: this.config.store?.slogan ?? 'Cà phê - Trà sữa - Trà trái cây',
+      address: this.config.store?.address ?? '36/27B Đ. Số 4, phường Hiệp Bình, Thủ Đức, Hồ Chí Minh',
+      phone: this.config.store?.phone ?? 'ĐT: 0931 792 220',
+    }
+
+    const centerText = (t: string, yy: number, fs = 12, f: 'normal' | 'bold' = 'normal') => {
+      doc.setFont('times', f); doc.setFontSize(fs); doc.setTextColor(...BLACK)
+      const x = (pageWidth - doc.getTextWidth(t)) / 2
+      doc.text(t, x, yy)
+      return yy + fs * 0.5 + 1
+    }
+    const drawDivider = (yy: number, lw = 0.35) => {
+      doc.setDrawColor(...BLACK); doc.setLineWidth(lw)
+      doc.line(marginX, yy, pageWidth - marginX, yy)
+    }
+
+    // Logo
+    if (doc._resolvedLogo) {
+      try {
+        this.addImageSmart(doc, doc._resolvedLogo, marginX, y - 2, 12, 12)
+        y += 2
+      } catch { }
+    }
+
+    y = centerText(store.name, y, 16, 'bold')
+    y = centerText(store.slogan, y, 9, 'normal')
+    y = centerText(store.address, y, 9, 'normal')
+    y = centerText(store.phone, y, 9, 'normal')
+
+    y += 3; drawDivider(y, 0.4); y += 7
+    y = centerText('LÁ VÀ SƯƠNG XIN CẢM ƠN', y, 12, 'bold'); y += 2
+
+    // Thông tin đơn hàng
+    const info: Array<[string, string]> = [
+      ['Mã đơn', `#${order.id?.toString().slice(-6) ?? '------'}`],
+      ['Ngày', this.config.formatDateTime(order.order_time)],
+      ['Thanh toán', order.payment_method_id === 1 ? 'Tiền mặt' : 'Chuyển khoản'],
+    ]
+    doc.setFont('times', 'normal'); doc.setFontSize(9.5); doc.setTextColor(...BLACK)
+    const qrSize = 24
+    const infoRightX = pageWidth - marginX - qrSize
+
+    if (doc._resolvedQR) {
+      try {
+        doc.setDrawColor(...BLACK); doc.setLineWidth(0.3)
+        doc.rect(infoRightX, y, qrSize, qrSize, 'S')
+        this.addImageSmart(doc, doc._resolvedQR, infoRightX + 1.2, y + 1.2, qrSize - 2.4, qrSize - 2.4)
+      } catch { }
+    }
+
+    let infoY = y + 1; const keyW = 22
+    info.forEach(([k, v]) => {
+      const val = this.softWrap(v)
+      doc.setFont('times', 'bold'); doc.text(`${k}:`, marginX, infoY)
+      doc.setFont('times', 'normal')
+      const maxW = doc._resolvedQR ? (infoRightX - 2 - (marginX + keyW)) : (contentWidth - keyW)
+      doc.text(doc.splitTextToSize(val, Math.max(20, maxW)), marginX + keyW, infoY)
+      infoY += 5.2
+    })
+    y = Math.max(infoY, doc._resolvedQR ? y + qrSize + 2 : infoY); y += 4
+    drawDivider(y, 0.3); y += 5
+
+    // Tóm tắt tổng tiền - REMOVED (Không kê giá / hóa đơn)
+
+    // Lời cảm ơn & xin đánh giá
+    const messages = [
+      'Cảm ơn quý khách đã tin tưởng',
+      'và lựa chọn Lá và Sương!',
+      '',
+      'Nếu quý khách hài lòng với thức uống,',
+      'mong quý khách dành chút thời gian',
+      'đánh giá 5 sao giúp quán nhé! * * * * *',
+      '',
+    ]
+
+    doc.setFont('times', 'normal'); doc.setFontSize(10.5); doc.setTextColor(...BLACK)
+    const printCenteredLines = (lines: string[]) => {
+      lines.forEach((msg) => {
+        if (msg) {
+          const w = doc.getTextWidth(msg)
+          doc.text(msg, (pageWidth - w) / 2, y)
+        }
+        y += 5.5
+      })
+    }
+
+    printCenteredLines(messages)
+    y += 4; drawDivider(y, 0.25); y += 6
+
+    // Link đánh giá
+    doc.setFont('times', 'bold'); doc.setFontSize(10)
+    doc.text('Link đánh giá:', marginX, y); y += 6
+    doc.setFont('times', 'normal'); doc.setFontSize(9)
+
+    // Google Map
+    doc.text('- Google Maps:', marginX, y); y += 4.5
+    doc.setFont('times', 'italic')
+    const gmapLink = 'https://maps.app.goo.gl/NJcD3owfNHosiBVu8' // Thay bằng link thật
+    doc.text(doc.splitTextToSize(gmapLink, contentWidth), marginX, y)
+    y += doc.splitTextToSize(gmapLink, contentWidth).length * 4.5 + 2
+
+    // Grab
+    doc.setFont('times', 'normal')
+    doc.text('- GrabFood:', marginX, y); y += 4.5
+    doc.setFont('times', 'italic')
+    const grabLink = 'https://grab.onelink.me/2695613898?pid=inappsharing&c=5-C7V1ACMUFB43JN&is_retargeting=true&af_dp=grab%3A%2F%2Fopen%3FscreenType%3DGRABFOOD%26sourceID%3DA4pcqCZkS4%26merchantIDs%3D5-C7V1ACMUFB43JN&af_force_deeplink=true&af_web_dp=https%3A%2F%2Fwww.grab.com%2Fdownload' // Thay bằng link thật
+    doc.text(doc.splitTextToSize(grabLink, contentWidth), marginX, y)
+    y += doc.splitTextToSize(grabLink, contentWidth).length * 4.5 + 4
+
+    drawDivider(y, 0.25); y += 6
+
+    doc.setFont('times', 'bold'); doc.setFontSize(11)
+    const heart = '*** TRÂN TRỌNG ***'
+    doc.text(heart, (pageWidth - doc.getTextWidth(heart)) / 2, y)
+    y += 6
 
     return y
   }
@@ -397,7 +528,7 @@ export class PDFService {
   async generateInvoice(order: Order): Promise<void> {
     // Resolve ảnh → chuyển BW trước (để 2-pass không tải lại)
     const resolvedLogo = await this.resolveImageBW(this.config.logoDataUrl, '/images/logo/logo3.png').catch(() => null)
-    const resolvedQR   = await this.resolveImageBW(this.config.qrDataUrl).catch(() => null)
+    const resolvedQR = await this.resolveImageBW(this.config.qrDataUrl).catch(() => null)
 
     // PASS 1: doc tạm cao 2000mm để đo
     const docTmp: jsPDF = jsPDFCus('portrait', 'mm', [80, 2000])
@@ -419,42 +550,97 @@ export class PDFService {
 
     // Xuất
     const blob = doc.output('blob')
-const fileName = `hoa-don-${order.id?.toString().slice(-6) ?? '------'}.pdf`
-const file = new File([blob], fileName, { type: 'application/pdf' })
+    const fileName = `hoa-don-${order.id?.toString().slice(-6) ?? '------'}.pdf`
+    const file = new File([blob], fileName, { type: 'application/pdf' })
 
-try {
-  // ✅ Ưu tiên: Web Share API (Level 2) — mở Share Sheet
-  // Yêu cầu: HTTPS + user-gesture (gọi trực tiếp trong onClick)
-  if (navigator.canShare?.({ files: [file] })) {
-    await navigator.share({
-      files: [file],
-      title: 'Hóa đơn',
-      text: `Hóa đơn #${order.id?.toString().slice(-6) ?? ''}`,
-    })
-    return
+    try {
+      // ✅ Ưu tiên: Web Share API (Level 2) — mở Share Sheet
+      // Yêu cầu: HTTPS + user-gesture (gọi trực tiếp trong onClick)
+      if (navigator.canShare?.({ files: [file] })) {
+        await navigator.share({
+          files: [file],
+          title: 'Hóa đơn',
+          text: `Hóa đơn #${order.id?.toString().slice(-6) ?? ''}`,
+        })
+        return
+      }
+    } catch (err) {
+      // Nếu user hủy Share Sheet hoặc lỗi, sẽ rơi xuống fallback
+      console.warn('Share failed or cancelled:', err)
+    }
+
+    // 2) Fallback: in trực tiếp bằng iframe ẩn (không mở preview/tab)
+    const blobUrl = URL.createObjectURL(blob)
+    const iframe = document.createElement('iframe')
+    iframe.style.position = 'fixed'
+    iframe.style.width = '0'
+    iframe.style.height = '0'
+    iframe.style.border = 'none'
+    iframe.style.pointerEvents = 'none'
+    iframe.src = blobUrl
+    document.body.appendChild(iframe)
+    iframe.onload = () => {
+      // Nhớ gọi từ handler click để giữ user-gesture
+      iframe.contentWindow?.focus()
+      iframe.contentWindow?.print()
+      // Dọn dẹp
+      URL.revokeObjectURL(blobUrl)
+      // document.body.removeChild(iframe)
+    }
   }
-} catch (err) {
-  // Nếu user hủy Share Sheet hoặc lỗi, sẽ rơi xuống fallback
-  console.warn('Share failed or cancelled:', err)
-}
 
-// 2) Fallback: in trực tiếp bằng iframe ẩn (không mở preview/tab)
-const blobUrl = URL.createObjectURL(blob)
-const iframe = document.createElement('iframe')
-iframe.style.position = 'fixed'
-iframe.style.width = '0'
-iframe.style.height = '0'
-iframe.style.border = 'none'
-iframe.style.pointerEvents = 'none'
-iframe.src = blobUrl
-document.body.appendChild(iframe)
-iframe.onload = () => {
-  // Nhớ gọi từ handler click để giữ user-gesture
-  iframe.contentWindow?.focus()
-  iframe.contentWindow?.print()
-  // Dọn dẹp
-  URL.revokeObjectURL(blobUrl)
-  // document.body.removeChild(iframe)
-}
+  async generateThankYou(order: Order): Promise<void> {
+    const resolvedLogo = await this.resolveImageBW(this.config.logoDataUrl, '/images/logo/logo3.png').catch(() => null)
+    const resolvedQR = await this.resolveImageBW(this.config.qrDataUrl).catch(() => null)
+
+    // PASS 1: đo chiều cao thực tế
+    const docTmp: jsPDF = jsPDFCus('portrait', 'mm', [80, 2000])
+    docTmp._resolvedLogo = resolvedLogo
+    docTmp._resolvedQR = resolvedQR
+    const yEnd = this.renderThankYou(docTmp, order)
+
+    const topBottomSafe = 6
+    const minHeight = 80
+    const maxHeight = 2800
+    const finalHeight = Math.max(minHeight, Math.min(Math.ceil(yEnd + topBottomSafe), maxHeight))
+
+    // PASS 2: render đúng chiều cao
+    const doc: jsPDF = jsPDFCus('portrait', 'mm', [80, finalHeight])
+    doc._resolvedLogo = resolvedLogo
+    doc._resolvedQR = resolvedQR
+    this.renderThankYou(doc, order)
+
+    const blob = doc.output('blob')
+    const fileName = `cam-on-${order.id?.toString().slice(-6) ?? '------'}.pdf`
+    const file = new File([blob], fileName, { type: 'application/pdf' })
+
+    try {
+      if (navigator.canShare?.({ files: [file] })) {
+        await navigator.share({
+          files: [file],
+          title: 'Phiếu cảm ơn',
+          text: `Cảm ơn quý khách — Đơn #${order.id?.toString().slice(-6) ?? ''}`,
+        })
+        return
+      }
+    } catch (err) {
+      console.warn('Share failed or cancelled:', err)
+    }
+
+    // Fallback: in qua iframe ẩn
+    const blobUrl = URL.createObjectURL(blob)
+    const iframe = document.createElement('iframe')
+    iframe.style.position = 'fixed'
+    iframe.style.width = '0'
+    iframe.style.height = '0'
+    iframe.style.border = 'none'
+    iframe.style.pointerEvents = 'none'
+    iframe.src = blobUrl
+    document.body.appendChild(iframe)
+    iframe.onload = () => {
+      iframe.contentWindow?.focus()
+      iframe.contentWindow?.print()
+      URL.revokeObjectURL(blobUrl)
+    }
   }
 }

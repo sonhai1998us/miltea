@@ -16,9 +16,10 @@ interface Props {
   onToggleStatus: (o: Order) => void
   onDeleteOrder: (o: Order) => void
   onBackToOrder: () => void
+  isCustomer?: boolean
 }
 
-function OrderManagementBase({ orders, formatPrice, formatDateTime, onToggleStatus, onDeleteOrder, onBackToOrder }: Props) {
+function OrderManagementBase({ orders, formatPrice, formatDateTime, onToggleStatus, onDeleteOrder, onBackToOrder, isCustomer }: Props) {
   const [processingOrderIds, setProcessingOrderIds] = useState<Set<number>>(new Set())
 
   const isProcessing = (orderId: number) => processingOrderIds.has(orderId)
@@ -44,6 +45,16 @@ function OrderManagementBase({ orders, formatPrice, formatDateTime, onToggleStat
         formatDateTime
       })
       await pdfService.generateInvoice(order)
+    })
+  }
+
+  const handlePrintThankYou = (order: Order) => {
+    withLoading(order.id, async () => {
+      const pdfService = new PDFService({
+        formatPrice,
+        formatDateTime
+      })
+      await pdfService.generateThankYou(order)
     })
   }
 
@@ -79,9 +90,10 @@ function OrderManagementBase({ orders, formatPrice, formatDateTime, onToggleStat
           <CardContent className="p-4">
             <div className="flex items-start justify-between mb-3">
               <div>
-                <div className="flex items-center gap-2 mb-1">
+                <div className="flex items-center gap-2 mb-1 flex-wrap">
                   <h3 className="font-semibold text-gray-800">Đơn hàng #{order.id.toString().slice(-6)}</h3>
                   <Badge className="bg-green-100 text-green-800">{order.is_completed ? "Hoàn thành" : "Đang xử lý"}</Badge>
+                  {order.queue_position && <Badge className="bg-rose-100 text-rose-800 border-rose-200">#Hàng chờ: {order.queue_position}</Badge>}
                 </div>
                 <div className="flex items-center gap-1 text-sm text-gray-500">
                   <Clock className="w-4 h-4" />
@@ -89,6 +101,7 @@ function OrderManagementBase({ orders, formatPrice, formatDateTime, onToggleStat
                 </div>
                 <p className="text-sm text-gray-600 mt-1">Thanh toán: {order.payment_method_id === 1 ? "Tiền mặt" : "Chuyển khoản"}</p>
               </div>
+              {!isCustomer && (
               <div className="flex gap-1">
                 <Button
                   variant="ghost"
@@ -109,6 +122,7 @@ function OrderManagementBase({ orders, formatPrice, formatDateTime, onToggleStat
                   {isProcessing(order.id) ? <Loader2 className="w-5 h-5 animate-spin" /> : <Trash2 className="w-5 h-5" />}
                 </Button>
               </div>
+              )}
             </div>
 
             <div className="space-y-2 mb-3">
@@ -141,26 +155,40 @@ function OrderManagementBase({ orders, formatPrice, formatDateTime, onToggleStat
               <span className="font-bold text-lg">Tổng cộng:</span>
               <span className="font-bold text-xl text-green-600">{formatPrice(order.total_amount)}</span>
             </div>
-            <div className="flex gap-2 mt-3">
-              <Button
-                variant="outline"
-                onClick={() => handlePrintBill(order)}
-                disabled={isProcessing(order.id)}
-                className="flex-1 border-green-300 text-green-700 disabled:opacity-50"
-              >
-                {isProcessing(order.id) ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-                In hóa đơn
-              </Button>
+            
+            {!isCustomer && (
+            <div className="flex flex-col gap-2 mt-3">
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => handlePrintBill(order)}
+                  disabled={isProcessing(order.id)}
+                  className="flex-1 border-green-300 text-green-700 disabled:opacity-50"
+                >
+                  {isProcessing(order.id) ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                  In hóa đơn
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => handlePrintThankYou(order)}
+                  disabled={isProcessing(order.id)}
+                  className="flex-1 border-emerald-400 text-emerald-700 hover:bg-emerald-50 disabled:opacity-50"
+                >
+                  {isProcessing(order.id) ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                  In lời cảm ơn
+                </Button>
+              </div>
               <Button
                 variant="default"
                 onClick={() => handleToggleStatus(order)}
                 disabled={isProcessing(order.id)}
-                className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 disabled:opacity-70"
+                className="w-full bg-gradient-to-r from-green-600 to-emerald-600 disabled:opacity-70"
               >
                 {isProcessing(order.id) ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
                 {order.is_completed ? "Đánh dấu chưa xong" : "Đánh dấu hoàn tất"}
               </Button>
             </div>
+            )}
           </CardContent>
         </Card>
       ))}

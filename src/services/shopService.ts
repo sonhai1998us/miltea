@@ -31,7 +31,14 @@ export class ShopService {
   // Fetch cart items
   static async fetchCartItems(): Promise<CartItem[]> {
     try {
-      const response = await fetchApi(this.getApiUrl('cart_items?fqnull=deleted_at'))
+      const sessionToken = typeof window !== 'undefined' ? sessionStorage.getItem('shop_session_token') : null;
+      let url = 'cart_items?fqnull=deleted_at';
+      if (sessionToken) {
+        url += `&fq=session_token:${sessionToken}`;
+      } else {
+        url += '&fqnull=session_token';
+      }
+      const response = await fetchApi(this.getApiUrl(url))
       return response?.status === 'success' && response?.data ? response.data as CartItem[] : []
     } catch (error) {
       console.error('Error fetching cart items:', error)
@@ -42,7 +49,12 @@ export class ShopService {
   // Fetch orders
   static async fetchOrders(): Promise<Order[]> {
     try {
-      const response = await fetchApi(this.getApiUrl('orders?fqnull=deleted_at'))
+      const sessionToken = typeof window !== 'undefined' ? sessionStorage.getItem('shop_session_token') : null;
+      let url = 'orders?fqnull=deleted_at';
+      if (sessionToken) {
+        url += `&fq=session_token:${sessionToken}`;
+      }
+      const response = await fetchApi(this.getApiUrl(url))
       return response?.status === 'success' && response?.data ? response.data as Order[] : []
     } catch (error) {
       console.error('Error fetching orders:', error)
@@ -61,10 +73,13 @@ export class ShopService {
     item_type?: string
   }): Promise<boolean> {
     try {
-      const cartPayload = {
+      const sessionToken = typeof window !== 'undefined' ? sessionStorage.getItem('shop_session_token') : null;
+      const cartPayload: any = {
         ...cartData,
         item_type: cartData.item_type || "PRODUCT"
       }
+      if (sessionToken) cartPayload.session_token = sessionToken;
+      
       const response = await postApi(this.getApiUrl('cart_items'), cartPayload)
       return response?.status === 'success'
     } catch (error) {
@@ -80,7 +95,8 @@ export class ShopService {
     notes?: string
   }): Promise<boolean> {
     try {
-      const cartPayload = {
+      const sessionToken = typeof window !== 'undefined' ? sessionStorage.getItem('shop_session_token') : null;
+      const cartPayload: any = {
         topping_id: cartData.topping_id,
         quantity: cartData.quantity,
         item_type: "TOPPING",
@@ -89,6 +105,8 @@ export class ShopService {
         ice_id: null,
         notes: cartData.notes || ""
       }
+      if (sessionToken) cartPayload.session_token = sessionToken;
+      
       const response = await postApi(this.getApiUrl('cart_items'), cartPayload)
       return response?.status === 'success'
     } catch (error) {
@@ -130,9 +148,15 @@ export class ShopService {
     total_amount: number
     is_completed: number
     discount_amount: number
+    session_token?: string
   }): Promise<Order | null> {
     try {
-      const response = await postApi(this.getApiUrl('orders'), orderData)
+      const sessionToken = typeof window !== 'undefined' ? sessionStorage.getItem('shop_session_token') : null;
+      const payload = { ...orderData };
+      if (sessionToken) {
+        payload.session_token = sessionToken;
+      }
+      const response = await postApi(this.getApiUrl('orders'), payload)
       if (response?.status === 'success') {
         const _fetchOrdersNewest = await fetchApi(this.getApiUrl('orders')).then(resp => (resp?.data as Order[])[0])
         return _fetchOrdersNewest

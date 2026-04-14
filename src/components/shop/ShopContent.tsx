@@ -19,6 +19,7 @@ interface ShopContentProps {
     onDeleteOrder: (order: Order) => void
     onBackToOrder: () => void
     onQuantityChange: (id: number, newQuantity: number) => void
+    isCustomer?: boolean
 }
 
 export const ShopContent = ({
@@ -34,6 +35,7 @@ export const ShopContent = ({
     onDeleteOrder,
     onBackToOrder,
     onQuantityChange,
+    isCustomer
 }: ShopContentProps) => {
     // Memoized values
     const sortedOrders = sortOrders(orders)
@@ -71,6 +73,7 @@ export const ShopContent = ({
                     onToggleStatus={onToggleOrderStatus}
                     onBackToOrder={onBackToOrder}
                     onDeleteOrder={onDeleteOrder}
+                    isCustomer={isCustomer}
                 />
             ) : (
                 <RevenueStatistics />

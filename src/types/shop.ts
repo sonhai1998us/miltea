@@ -54,6 +54,8 @@ export interface Order {
   total_amount: number
   discount_amount: number
   is_completed: boolean
+  queue_position?: number
+  session_token?: string
 }
 
 export interface Voucher {
