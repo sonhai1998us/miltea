@@ -36,7 +36,7 @@ export class ShopService {
       if (sessionToken) {
         url += `&fq=session_token:${sessionToken}`;
       } else {
-        url += '&fqnull=session_token';
+        url += '';
       }
       const response = await fetchApi(this.getApiUrl(url))
       return response?.status === 'success' && response?.data ? response.data as CartItem[] : []
@@ -79,7 +79,7 @@ export class ShopService {
         item_type: cartData.item_type || "PRODUCT"
       }
       if (sessionToken) cartPayload.session_token = sessionToken;
-      
+
       const response = await postApi(this.getApiUrl('cart_items'), cartPayload)
       return response?.status === 'success'
     } catch (error) {
@@ -106,7 +106,7 @@ export class ShopService {
         notes: cartData.notes || ""
       }
       if (sessionToken) cartPayload.session_token = sessionToken;
-      
+
       const response = await postApi(this.getApiUrl('cart_items'), cartPayload)
       return response?.status === 'success'
     } catch (error) {
