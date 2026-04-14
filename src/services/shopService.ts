@@ -36,7 +36,7 @@ export class ShopService {
       if (sessionToken) {
         url += `&fq=session_token:${sessionToken}`;
       } else {
-        url += '';
+        url += '&fqnull=session_token';
       }
       const response = await fetchApi(this.getApiUrl(url))
       return response?.status === 'success' && response?.data ? response.data as CartItem[] : []
@@ -158,15 +158,9 @@ export class ShopService {
       }
       const response = await postApi(this.getApiUrl('orders'), payload)
       if (response?.status === 'success') {
-        // Re-fetch orders scoped to this session to get the latest one
-        const orderUrl = sessionToken
-          ? `orders?fqnull=deleted_at&fq=session_token:${sessionToken}&limit=1&sort=id:desc`
-          : `orders?fqnull=deleted_at&limit=1&sort=id:desc`;
-        const fetchResp = await fetchApi(this.getApiUrl(orderUrl));
-        const orders = fetchResp?.data as Order[];
-        return Array.isArray(orders) && orders.length > 0 ? orders[0] : null;
+        return (response.data as Order) ?? null
       }
-      return null;
+      return null
     } catch (error) {
       console.error('Error creating order:', error)
       return null

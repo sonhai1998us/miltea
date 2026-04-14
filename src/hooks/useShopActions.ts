@@ -188,6 +188,11 @@ export const useShopActions = (
       // Clear cart
       await ShopService.clearCart(cart)
 
+      // Notify admin that the order is fully completed (items are inserted)
+      import('@/hooks/useSocket').then(({ getSocket }) => {
+        getSocket().emit('notify_admin');
+      });
+
       // Refresh data
       const [refreshedOrders, refreshedCart] = await Promise.all([
         ShopService.fetchOrders(),
@@ -255,7 +260,11 @@ export const useShopActions = (
     )
 
     const success = await ShopService.updateOrderStatus(order.id, !order.is_completed)
-    if (!success) {
+    if (success) {
+      import('@/hooks/useSocket').then(({ getSocket }) => {
+        getSocket().emit('notify_order_changed')
+      })
+    } else {
       // Revert on error
       setOrders((prev) =>
         prev.map((o) =>
@@ -273,8 +282,13 @@ export const useShopActions = (
 
     setOrders((prev) => prev.filter((o) => o.id !== order.id))
 
-    await ShopService.deleteOrder(order.id).then(resp => resp)
-    ShopService.fetchOrders().then(resp => setOrders(resp))
+    await ShopService.deleteOrder(order.id).then(resp => {
+      import('@/hooks/useSocket').then(({ getSocket }) => {
+        getSocket().emit('notify_order_changed')
+      })
+      ShopService.fetchOrders().then(r => setOrders(r))
+      return resp;
+    })
 
   }, [setOrders, state.orders])
 

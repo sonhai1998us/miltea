@@ -11,6 +11,7 @@ import { AdminGate } from "@/components/shop/AdminGate"
 import { QueueBadge } from "@/components/shop/QueueBadge"
 import { useShopState } from "@/hooks/useShopState"
 import { useShopActions } from "@/hooks/useShopActions"
+import { useOrderSocket } from "@/hooks/useAdminSocket"
 import { updateQuantity } from "@/utils/shopUtils"
 import { MilkTea } from "@/types/shop"
 
@@ -23,6 +24,9 @@ function ShopInner() {
   useEffect(() => {
     actions.fetchInitialData()
   }, [actions.fetchInitialData])
+
+  // Cả Admin và Customer đều cần lắng nghe socket để cập nhật order
+  useOrderSocket(isCustomer, state.setOrders)
 
   const pendingOrdersCount = useMemo(() => state.orders.filter((o) => !o.is_completed).length, [state.orders])
   
