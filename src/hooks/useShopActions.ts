@@ -66,7 +66,7 @@ export const useShopActions = (
     setSelectedMilkTea(milkTea)
     // resetSheetState()
     setActiveSheet('customization')
-  }, [setSelectedMilkTea, resetSheetState, setActiveSheet])
+  }, [setSelectedMilkTea, setActiveSheet])
 
   // Confirm add to cart
   const confirmAddToCart = useCallback(async (id: number) => {
@@ -242,13 +242,13 @@ export const useShopActions = (
         // Reset quantity
         setQuantities(prev => ({ ...prev, [topping.id]: 0 }))
       } else {
-        alert('Có lỗi xảy ra khi thêm topping vào giỏ hàng')
+        state.setToast({ message: 'Có lỗi xảy ra khi thêm topping vào giỏ hàng', variant: 'error' })
       }
     } catch (error) {
       console.error('Error adding topping to cart:', error)
-      alert('Có lỗi xảy ra khi thêm topping vào giỏ hàng')
+      state.setToast({ message: 'Có lỗi xảy ra khi thêm topping vào giỏ hàng', variant: 'error' })
     }
-  }, [quantities, setCart, setQuantities])
+  }, [quantities, setCart, setQuantities, state.setToast])
 
   // Toggle order status
   const toggleOrderStatus = useCallback(async (order: Order) => {
@@ -274,12 +274,8 @@ export const useShopActions = (
     }
   }, [setOrders])
 
-  // Delete order
+  // Delete order (confirmation is handled in the UI layer)
   const deleteOrder = useCallback(async (order: Order) => {
-    if (!confirm('Bạn có chắc muốn xóa đơn hàng này?')) {
-      return
-    }
-
     setOrders((prev) => prev.filter((o) => o.id !== order.id))
 
     await ShopService.deleteOrder(order.id).then(resp => {

@@ -8,6 +8,7 @@ import { Clock, CheckCircle, Circle, Trash2, Loader2 } from "lucide-react"
 import { Separator } from "@/components/ui/separator"
 import { Order, Topping } from "@/types/shop"
 import { PDFService } from "@/services/pdfService"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
 
 interface Props {
   orders: Order[]
@@ -21,6 +22,7 @@ interface Props {
 
 function OrderManagementBase({ orders, formatPrice, formatDateTime, onToggleStatus, onDeleteOrder, onBackToOrder, isCustomer }: Props) {
   const [processingOrderIds, setProcessingOrderIds] = useState<Set<number>>(new Set())
+  const [deleteTarget, setDeleteTarget] = useState<Order | null>(null)
 
   const isProcessing = (orderId: number) => processingOrderIds.has(orderId)
 
@@ -65,8 +67,14 @@ function OrderManagementBase({ orders, formatPrice, formatDateTime, onToggleStat
   }
 
   const handleDeleteOrder = (order: Order) => {
-    withLoading(order.id, async () => {
-      await onDeleteOrder(order)
+    setDeleteTarget(order)
+  }
+
+  const confirmDelete = () => {
+    if (!deleteTarget) return
+    setDeleteTarget(null)
+    withLoading(deleteTarget.id, async () => {
+      await onDeleteOrder(deleteTarget)
     })
   }
 
@@ -84,6 +92,21 @@ function OrderManagementBase({ orders, formatPrice, formatDateTime, onToggleStat
   }
 
   return (
+    <>
+    <Dialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+      <DialogContent showCloseButton={false} className="max-w-sm">
+        <DialogHeader>
+          <DialogTitle>Xác nhận xóa</DialogTitle>
+          <DialogDescription>
+            Bạn có chắc muốn xóa đơn hàng #{deleteTarget?.id.toString().slice(-6)}? Hành động này không thể hoàn tác.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setDeleteTarget(null)}>Hủy</Button>
+          <Button variant="destructive" onClick={confirmDelete}>Xóa</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
     <div className="p-4 max-w-md mx-auto pb-24 space-y-4 print:hidden">
       {orders.map((order) => (
         <Card key={order.id} className={`border-2 ${order.is_completed ? "border-green-200 bg-green-50" : "border-green-200"}`}>
@@ -193,6 +216,7 @@ function OrderManagementBase({ orders, formatPrice, formatDateTime, onToggleStat
         </Card>
       ))}
     </div>
+    </>
   )
 }
 

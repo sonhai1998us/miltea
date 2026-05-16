@@ -40,6 +40,9 @@ export const useShopState = () => {
     const [discountAmount, setDiscountAmount] = useState<number>(0)
     const [discountLocked, setDiscountLocked] = useState<boolean>(false)
 
+    // Toast state
+    const [toast, setToast] = useState<{ message: string; variant: 'error' | 'success' } | null>(null)
+
     // Reset sheet state
     const resetSheetState = useCallback(() => {
         setSheetSweetness("4")
@@ -118,6 +121,10 @@ export const useShopState = () => {
         setDiscountAmount,
         discountLocked,
         setDiscountLocked,
+
+        // Toast state
+        toast,
+        setToast,
 
         // Utility functions
         resetSheetState,

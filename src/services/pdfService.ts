@@ -394,14 +394,12 @@ export class PDFService {
   }
 
   // ---------- THANK-YOU RENDER ----------
-  private renderThankYou(doc: jsPDF, order: Order): number {
+  private renderThankYou(doc: jsPDF, _order: Order): number {
     const pageWidth = doc.internal.pageSize.getWidth()
     const marginX = 6
-    const contentWidth = pageWidth - marginX * 2
     let y = 10
 
     const BLACK: [number, number, number] = [0, 0, 0]
-    const WHITE: [number, number, number] = [255, 255, 255]
 
     const store = {
       name: this.config.store?.name ?? 'Lá và Sương',
@@ -421,7 +419,6 @@ export class PDFService {
       doc.line(marginX, yy, pageWidth - marginX, yy)
     }
 
-    // Logo
     if (doc._resolvedLogo) {
       try {
         this.addImageSmart(doc, doc._resolvedLogo, marginX, y - 2, 12, 12)
@@ -435,86 +432,41 @@ export class PDFService {
     y = centerText(store.phone, y, 9, 'normal')
 
     y += 3; drawDivider(y, 0.4); y += 7
-    y = centerText('LÁ VÀ SƯƠNG XIN CẢM ƠN', y, 12, 'bold'); y += 2
+    y = centerText('LÁ VÀ SƯƠNG XIN CẢM ƠN', y, 12, 'bold'); y += 4
 
-    // Thông tin đơn hàng
-    const info: Array<[string, string]> = [
-      ['Mã đơn', `#${order.id?.toString().slice(-6) ?? '------'}`],
-      ['Ngày', this.config.formatDateTime(order.order_time)],
-      ['Thanh toán', order.payment_method_id === 1 ? 'Tiền mặt' : 'Chuyển khoản'],
-    ]
-    doc.setFont('times', 'normal'); doc.setFontSize(9.5); doc.setTextColor(...BLACK)
-    const qrSize = 24
-    const infoRightX = pageWidth - marginX - qrSize
-
-    if (doc._resolvedQR) {
-      try {
-        doc.setDrawColor(...BLACK); doc.setLineWidth(0.3)
-        doc.rect(infoRightX, y, qrSize, qrSize, 'S')
-        this.addImageSmart(doc, doc._resolvedQR, infoRightX + 1.2, y + 1.2, qrSize - 2.4, qrSize - 2.4)
-      } catch { }
-    }
-
-    let infoY = y + 1; const keyW = 22
-    info.forEach(([k, v]) => {
-      const val = this.softWrap(v)
-      doc.setFont('times', 'bold'); doc.text(`${k}:`, marginX, infoY)
-      doc.setFont('times', 'normal')
-      const maxW = doc._resolvedQR ? (infoRightX - 2 - (marginX + keyW)) : (contentWidth - keyW)
-      doc.text(doc.splitTextToSize(val, Math.max(20, maxW)), marginX + keyW, infoY)
-      infoY += 5.2
-    })
-    y = Math.max(infoY, doc._resolvedQR ? y + qrSize + 2 : infoY); y += 4
-    drawDivider(y, 0.3); y += 5
-
-    // Tóm tắt tổng tiền - REMOVED (Không kê giá / hóa đơn)
-
-    // Lời cảm ơn & xin đánh giá
     const messages = [
       'Cảm ơn quý khách đã tin tưởng',
       'và lựa chọn Lá và Sương!',
       '',
       'Nếu quý khách hài lòng với thức uống,',
       'mong quý khách dành chút thời gian',
-      'đánh giá 5 sao giúp quán nhé! * * * * *',
+      'đánh giá 5 sao giúp quán nhé!',
       '',
+      '* * * * *',
     ]
 
     doc.setFont('times', 'normal'); doc.setFontSize(10.5); doc.setTextColor(...BLACK)
-    const printCenteredLines = (lines: string[]) => {
-      lines.forEach((msg) => {
-        if (msg) {
-          const w = doc.getTextWidth(msg)
-          doc.text(msg, (pageWidth - w) / 2, y)
-        }
-        y += 5.5
-      })
-    }
+    messages.forEach((msg) => {
+      if (msg) {
+        doc.text(msg, (pageWidth - doc.getTextWidth(msg)) / 2, y)
+      }
+      y += 5.5
+    })
 
-    printCenteredLines(messages)
-    y += 4; drawDivider(y, 0.25); y += 6
+    y += 4; drawDivider(y, 0.25); y += 5
 
-    // Link đánh giá
-    doc.setFont('times', 'bold'); doc.setFontSize(10)
-    doc.text('Link đánh giá:', marginX, y); y += 6
-    doc.setFont('times', 'normal'); doc.setFontSize(9)
+    doc.setFont('times', 'normal'); doc.setFontSize(9.5); doc.setTextColor(...BLACK)
+    const supportLines = [
+      'Nếu có vấn đề, vui lòng liên hệ:',
+      store.phone,
+    ]
+    supportLines.forEach((line) => {
+      doc.setFont('times', line === store.phone ? 'bold' : 'normal')
+      doc.text(line, (pageWidth - doc.getTextWidth(line)) / 2, y)
+      y += 5
+    })
 
-    // Google Map
-    doc.text('- Google Maps:', marginX, y); y += 4.5
-    doc.setFont('times', 'italic')
-    const gmapLink = 'https://maps.app.goo.gl/NJcD3owfNHosiBVu8' // Thay bằng link thật
-    doc.text(doc.splitTextToSize(gmapLink, contentWidth), marginX, y)
-    y += doc.splitTextToSize(gmapLink, contentWidth).length * 4.5 + 2
-
-    // Grab
-    doc.setFont('times', 'normal')
-    doc.text('- GrabFood:', marginX, y); y += 4.5
-    doc.setFont('times', 'italic')
-    const grabLink = 'https://grab.onelink.me/2695613898?pid=inappsharing&c=5-C7V1ACMUFB43JN&is_retargeting=true&af_dp=grab%3A%2F%2Fopen%3FscreenType%3DGRABFOOD%26sourceID%3DA4pcqCZkS4%26merchantIDs%3D5-C7V1ACMUFB43JN&af_force_deeplink=true&af_web_dp=https%3A%2F%2Fwww.grab.com%2Fdownload' // Thay bằng link thật
-    doc.text(doc.splitTextToSize(grabLink, contentWidth), marginX, y)
-    y += doc.splitTextToSize(grabLink, contentWidth).length * 4.5 + 4
-
-    drawDivider(y, 0.25); y += 6
+    y += 3; drawDivider(y, 0.25); y += 6
 
     doc.setFont('times', 'bold'); doc.setFontSize(11)
     const heart = '*** TRÂN TRỌNG ***'
@@ -591,12 +543,10 @@ export class PDFService {
 
   async generateThankYou(order: Order): Promise<void> {
     const resolvedLogo = await this.resolveImageBW(this.config.logoDataUrl, '/images/logo/logo3.png').catch(() => null)
-    const resolvedQR = await this.resolveImageBW(this.config.qrDataUrl).catch(() => null)
 
     // PASS 1: đo chiều cao thực tế
     const docTmp: jsPDF = jsPDFCus('portrait', 'mm', [80, 2000])
     docTmp._resolvedLogo = resolvedLogo
-    docTmp._resolvedQR = resolvedQR
     const yEnd = this.renderThankYou(docTmp, order)
 
     const topBottomSafe = 6
@@ -607,7 +557,6 @@ export class PDFService {
     // PASS 2: render đúng chiều cao
     const doc: jsPDF = jsPDFCus('portrait', 'mm', [80, finalHeight])
     doc._resolvedLogo = resolvedLogo
-    doc._resolvedQR = resolvedQR
     this.renderThankYou(doc, order)
 
     const blob = doc.output('blob')
