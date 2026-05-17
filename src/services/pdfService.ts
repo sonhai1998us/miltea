@@ -419,19 +419,19 @@ export class PDFService {
       doc.line(marginX, yy, pageWidth - marginX, yy)
     }
 
-    if (doc._resolvedLogo) {
-      try {
-        this.addImageSmart(doc, doc._resolvedLogo, marginX, y - 2, 12, 12)
-        y += 2
-      } catch { }
-    }
+    // if (doc._resolvedLogo) {
+    //   try {
+    //     this.addImageSmart(doc, doc._resolvedLogo, marginX, y - 2, 12, 12)
+    //     y += 2
+    //   } catch { }
+    // }
 
-    y = centerText(store.name, y, 16, 'bold')
-    y = centerText(store.slogan, y, 9, 'normal')
-    y = centerText(store.address, y, 9, 'normal')
-    y = centerText(store.phone, y, 9, 'normal')
+    // y = centerText(store.name, y, 16, 'bold')
+    // y = centerText(store.slogan, y, 9, 'normal')
+    // y = centerText(store.address, y, 9, 'normal')
+    // y = centerText(store.phone, y, 9, 'normal')
 
-    y += 3; drawDivider(y, 0.4); y += 7
+    // y += 3; drawDivider(y, 0.4); y += 7
     y = centerText('LÁ VÀ SƯƠNG XIN CẢM ƠN', y, 12, 'bold'); y += 4
 
     const messages = [
