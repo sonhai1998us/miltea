@@ -8,14 +8,29 @@ export const formatPrice = (price: number): string => {
   }).format(price)
 }
 
-// Format date time to Vietnamese format
+// Shop timezone: always display GMT+7 regardless of the viewer's device timezone
+export const VN_TIMEZONE = "Asia/Ho_Chi_Minh"
+
+// Format date time to Vietnamese format (GMT+7)
 export const formatDateTime = (date: Date | string | number): string => {
-  return new Intl.DateTimeFormat("vi-VN", { 
-    day: "2-digit", 
-    month: "2-digit", 
-    year: "numeric", 
-    hour: "2-digit", 
-    minute: "2-digit" 
+  return new Intl.DateTimeFormat("vi-VN", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: VN_TIMEZONE,
+  }).format(new Date(date))
+}
+
+// Calendar date (YYYY-MM-DD) in GMT+7, e.g. for date inputs / API filters
+export const toVNDateString = (date: Date | string | number = new Date()): string => {
+  // en-CA formats as YYYY-MM-DD
+  return new Intl.DateTimeFormat("en-CA", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    timeZone: VN_TIMEZONE,
   }).format(new Date(date))
 }
 

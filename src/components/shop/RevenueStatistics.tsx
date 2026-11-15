@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { formatPrice } from "@/utils/shopUtils"
+import { formatPrice, toVNDateString } from "@/utils/shopUtils"
 import { Loader2, Calendar, TrendingUp, ShoppingCart, DollarSign } from "lucide-react"
 
 interface RevenueData {
@@ -25,11 +25,10 @@ export default function RevenueStatistics() {
     const [type, setType] = useState<"day" | "month">("day")
     const [scope, setScope] = useState<"revenue" | "product" | "toppings" | "discount">("revenue")
 
-    // Initialize with current month
-    const today = new Date()
-    const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1)
-    const [startDate, setStartDate] = useState(firstDayOfMonth.toISOString().split('T')[0])
-    const [endDate, setEndDate] = useState(today.toISOString().split('T')[0])
+    // Initialize with current month (GMT+7)
+    const todayVN = toVNDateString()
+    const [startDate, setStartDate] = useState(`${todayVN.slice(0, 7)}-01`)
+    const [endDate, setEndDate] = useState(todayVN)
 
     const fetchData = async () => {
         setLoading(true)

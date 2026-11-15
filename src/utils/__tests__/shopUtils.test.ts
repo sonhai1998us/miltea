@@ -1,6 +1,7 @@
 import {
   formatPrice,
   formatDateTime,
+  toVNDateString,
   formatInputNumber,
   calculateTotalCartPrice,
   sortOrders,
@@ -19,6 +20,18 @@ describe("shopUtils", () => {
     const result = formatDateTime(new Date("2024-01-02T03:04:00Z"))
     expect(typeof result).toBe("string")
     expect(result.length).toBeGreaterThan(0)
+  })
+
+  test("formatDateTime always shows GMT+7 regardless of machine timezone", () => {
+    // 20:30 UTC = 03:30 next day in Vietnam
+    const result = formatDateTime("2024-01-02T20:30:00.000Z")
+    expect(result).toContain("03/01/2024")
+    expect(result).toContain("03:30")
+  })
+
+  test("toVNDateString returns YYYY-MM-DD in GMT+7", () => {
+    expect(toVNDateString(new Date("2024-01-31T17:00:00Z"))).toBe("2024-02-01")
+    expect(toVNDateString(new Date("2024-01-31T16:59:00Z"))).toBe("2024-01-31")
   })
 
   test("formatInputNumber strips non-digits and groups", () => {
