@@ -2,6 +2,7 @@ import {
   formatPrice,
   formatDateTime,
   toVNDateString,
+  toVNDateTimeString,
   formatInputNumber,
   calculateTotalCartPrice,
   sortOrders,
@@ -27,6 +28,13 @@ describe("shopUtils", () => {
     const result = formatDateTime("2024-01-02T20:30:00.000Z")
     expect(result).toContain("03/01/2024")
     expect(result).toContain("03:30")
+  })
+
+  test("toVNDateTimeString returns 'YYYY-MM-DD HH:mm:ss' wall-clock in GMT+7", () => {
+    // 01:44:29 UTC = 08:44:29 in Vietnam
+    expect(toVNDateTimeString(new Date("2026-11-15T01:44:29.000Z"))).toBe("2026-11-15 08:44:29")
+    // crosses midnight: 17:05:09 UTC = 00:05:09 next day in Vietnam
+    expect(toVNDateTimeString(new Date("2026-12-31T17:05:09.000Z"))).toBe("2027-01-01 00:05:09")
   })
 
   test("toVNDateString returns YYYY-MM-DD in GMT+7", () => {

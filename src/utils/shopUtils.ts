@@ -34,6 +34,23 @@ export const toVNDateString = (date: Date | string | number = new Date()): strin
   }).format(new Date(date))
 }
 
+// Wall-clock datetime "YYYY-MM-DD HH:mm:ss" in GMT+7.
+// The API stores DATETIME values as GMT+7 wall-clock, so order_time must be sent in this form.
+export const toVNDateTimeString = (date: Date | string | number = new Date()): string => {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hourCycle: "h23",
+    timeZone: VN_TIMEZONE,
+  }).formatToParts(new Date(date))
+  const get = (type: Intl.DateTimeFormatPartTypes) => parts.find(p => p.type === type)?.value ?? ""
+  return `${get("year")}-${get("month")}-${get("day")} ${get("hour")}:${get("minute")}:${get("second")}`
+}
+
 // Format input number with Vietnamese locale
 export const formatInputNumber = (value: string): string => {
   const number = value.replace(/\D/g, '')

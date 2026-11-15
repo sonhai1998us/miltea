@@ -1,7 +1,7 @@
 import { useCallback, useMemo } from "react"
 import { ShopService } from "@/services/shopService"
 import { MilkTea, Topping, Order } from "@/types/shop"
-import { validateCashPayment, calculateTotalCartPrice } from "@/utils/shopUtils"
+import { validateCashPayment, calculateTotalCartPrice, toVNDateTimeString } from "@/utils/shopUtils"
 
 export const useShopActions = (
   state: ReturnType<typeof import('./useShopState').useShopState>
@@ -155,12 +155,9 @@ export const useShopActions = (
       }
     }
     setCashError("")
-    const now = new Date();
     const orderData = {
       payment_method_id: paymentMethod === "cash" ? 1 : 2,
-      order_time: new Date(now.getTime() + 0 * 60 * 60 * 1000).toISOString()
-      .slice(0, 19)
-      .replace('T', ' '),
+      order_time: toVNDateTimeString(),
       total_amount: getTotalCartPrice,
       is_completed: 0,
       discount_amount: discountLocked ? discountAmount : 0,
